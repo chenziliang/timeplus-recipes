@@ -56,10 +56,71 @@ CREATE DICTIONARY ch_products_dict_cached(
 )
 PRIMARY KEY id 
 SOURCE(CLICKHOUSE(DB 'default' TABLE 'products' HOST 'localhost' PORT 9000 USER 'default' PASSWORD ''))
-LIFETIME(MIN 1 MAX 10)
+LIFETIME(MIN 1800 MAX 3600) -- in seconds
 LAYOUT(complex_key_cache(size_in_cells 1000000000 allow_read_expired_keys 1 max_update_queue_size 100000 update_queue_push_timeout_milliseconds 100 query_wait_timeout_milliseconds 60000 max_threads_for_updates 4));
 
---
+-- SSD cached
+
+CREATE DICTIONARY ch_products_dict_cached(
+    `id` string,                          
+    `name` string,                                                              
+    `d1` string,                                                                
+    `d2` string,                                                                
+    `d3` string,                                                                
+    `d4` string,                                                                
+    `d5` string,                                                                
+    `d6` string,                                                                
+    `d7` string,                                                                
+    `d8` string,                                                                
+    `d9` string,                                                                
+    `d10` string,                                                               
+    `d11` string,                                                               
+    `d12` string,                                                               
+    `d13` string,                                                               
+    `d14` string,                                                               
+    `d15` string,                                                               
+    `d16` string,                                                               
+    `d17` string,                                                               
+    `d18` string,                                                               
+    `d19` string,                                                               
+    `d20` string,                                                               
+    `d21` string,                                                               
+    `d22` string,                                                               
+    `d23` string,                                                               
+    `d24` string,                                                               
+    `d25` string,                                                               
+    `d26` string,                                                               
+    `d27` string,                                                               
+    `d28` string,                                                               
+    `d29` string,                                                               
+    `d30` string,                                                               
+    `d31` string,                                                               
+    `d32` string,                                                               
+    `d33` string,                                                               
+    `d34` string,                                                               
+    `d35` string,                                                               
+    `d36` string,                                                               
+    `d37` string,                                                               
+    `d39` string,                                                               
+    `d40` string,                                                               
+    `d41` string,                                                               
+    `d42` string,                                                               
+    `d43` string,                                                               
+    `d44` string,                                                               
+    `d45` string,                                                               
+    `d46` string,                                                               
+    `d47` string,                                                               
+    `d48` string,                                                               
+    `d49` string,                                                               
+    `d50` string,                                                               
+    `dt` datetime                
+)
+PRIMARY KEY id 
+SOURCE(CLICKHOUSE(DB 'default' TABLE 'products' HOST 'localhost' PORT 9000 USER 'default' PASSWORD ''))
+LIFETIME(MIN 1800 MAX 3600) -- in seconds
+LAYOUT(complex_key_ssd_cache(block_size 4096 file_size 1073741824 read_buffer_size 131072 write_buffer_size 1048576 path '/var/lib/timeplusd/user_files/products_dict'));
+
+-- Direct
 
 CREATE DICTIONARY ch_products_dict_direct(
     `id` string,                          
@@ -123,7 +184,7 @@ LAYOUT(complex_key_direct());
 -- Timeplus stream do remote ClickHouse lookup join via dictionary
 create random stream r_orders 
 (                                                                               
-    `product_id` string default 'key_' || to_string(rand64() % 200000000),                          
+    `product_id` string default 'key_' || to_string(rand64() % 20000),                          
     `name` string,                                                              
     `d1` string,                                                                
     `d2` string,                                                                
