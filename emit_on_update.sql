@@ -3,5 +3,6 @@
 CREATE STREAM emit_on_update(k string, i int);
 
 SELECT k, count(), sum(i), min(i), max(i)
+FROM emit_on_update 
 GROUP BY k
 EMIT ON UPDATE;
