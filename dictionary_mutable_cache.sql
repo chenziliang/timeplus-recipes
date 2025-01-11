@@ -17,7 +17,7 @@ CREATE DICTIONARY mysql_products_dict_mutable(
 )
 PRIMARY KEY id
 SOURCE(MYSQL(DB 'test' TABLE 'products' HOST '127.0.0.1' PORT 3306 USER 'root' PASSWORD 'my' BG_RECONNECT true))
-LAYOUT(mutable_cache(database 'default' stream 'mysql_mutable_cache' update_from_source false));
+LAYOUT(mutable_cache(db 'default' stream 'mysql_mutable_cache' update_from_source false));
 
 -- Test connectivity via dict_get for product id `pid_0001`
 SELECT dict_get('mysql_products_dict_mutable', 'name', 'pid_0001');
