@@ -25,7 +25,7 @@ SELECT dict_get('mysql_products_dict_mutable', 'name', 'pid_0001');
 -- The join will first lookup keys in mutable stream, if the all keys are found in mutable stream, 
 -- the join can finish without falling back to do remote mysql lookup; otherwise it will send 
 -- fetch query to remote mysql for missing keys and stitch the two parts (keys from mutable 
--- stream and keys from remtoe mysql) to finish the query. 
+-- stream and keys from remote mysql) to finish the query. 
 SELECT * FROM orders JOIN mysql_products_dict_mutable AS products
 ON orders.product_id = products.id
 SETTINGS join_algorithm = 'direct';
