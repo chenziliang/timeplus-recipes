@@ -46,7 +46,14 @@ SELECT dict_get('mysql_products_dict_direct', 'name', 'pid_0001');
 CREATE STREAM orders (
     `id` string,
     `product_id` string,
-    `quantity` uint32
+    `order_customer_status_id` string,
+    `country` string,
+    `city` string,
+    `customer_id` string,
+    `store_branch_id` string,
+    `shipping_company_id` string,
+    `store_bank_id` string,
+    `order_status_id` string,
 );
 
 SELECT * FROM orders JOIN mysql_products_dict_direct AS products
