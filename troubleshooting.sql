@@ -6,12 +6,29 @@ WHERE state_name LIKE 'processed_sn_%' OR state_name LIKE 'end_sn_%'
 
 -- Commit sn and applied sn lag and their storage sizes of streams
 
+WITH sorted_recent_data_points AS
+(
+    SELECT
+        node_id, database, name, state_name, state_value, _tp_time AS ts
+    FROM
+        table(system.stream_state_log)
+    WHERE
+    NOT (starts_with(name, 'mv_k_') OR starts_with(name, '_k_')) AND 
+    ((state_name = 'stream_logstore_disk_size') OR (state_name = 'stream_historical_store_disk_size') OR (state_name LIKE 'committed_sn_%') OR (state_name LIKE 'applied_sn_%')) AND (_tp_time > (now() - 15m))
+    ORDER BY _tp_time ASC
+)
+SELECT node_id, database, name, state_name, latest(state_value) AS state_value, latest(ts) AS ts 
+FROM sorted_recent_data_points 
+GROUP BY
+    node_id, database, name, state_name
+ORDER BY node_id, database, name, state_name;
+
 SELECT
   node_id, database, name, state_name, latest(state_value) AS state_value, latest(_tp_time) AS ts
 FROM
   table(system.stream_state_log)
 WHERE
-  ((state_name = 'stream_logstore_disk_size') OR (state_name = 'stream_historical_store_disk_size') OR (state_name LIKE 'committed_sn_%') OR (state_name LIKE 'applied_sn_%')) AND (_tp_time > (now() - 5m))
+  ((state_name = 'stream_logstore_disk_size') OR (state_name = 'stream_historical_store_disk_size') OR (state_name LIKE 'committed_sn_%') OR (state_name LIKE 'applied_sn_%')) AND (_tp_time > (now() - 30m))
 GROUP BY
   node_id, database, name, state_name
 SETTINGS
@@ -27,7 +44,7 @@ WITH sorted_recent_data_points AS
     FROM
       table(system.stream_state_log)
     WHERE
-      (state_name = 'quorum_replication_status') -- AND (_tp_time > (now() - 1m))
+      (state_name = 'quorum_replication_status') AND (_tp_time > (now() - 1m))
     ORDER BY
       _tp_time DESC
   ), latest_data_point AS
@@ -59,14 +76,33 @@ ORDER BY
   node, shard ASC;
 
 
-WITH sorted_recent_data_points AS
+
+./programs/timeplusd client -h 127.0.0.1 --port 8463 --user <username> --password <password> --query "WITH sorted_recent_data_points AS
+(
+    SELECT
+        node_id, database, name, state_name, state_value, _tp_time AS ts
+    FROM
+        table(system.stream_state_log)
+    WHERE
+    NOT (starts_with(name, 'mv_k_') OR starts_with(name, '_k_')) AND 
+    ((state_name = 'stream_logstore_disk_size') OR (state_name = 'stream_historical_store_disk_size') OR (state_name LIKE 'committed_sn_%') OR (state_name LIKE 'applied_sn_%')) AND (_tp_time > (now() - 15m))
+    ORDER BY _tp_time ASC
+)
+SELECT node_id, database, name, state_name, latest(state_value) AS state_value, latest(ts) AS ts 
+FROM sorted_recent_data_points 
+GROUP BY
+    node_id, database, name, state_name
+ORDER BY node_id, database, name, state_name FORMAT CSV" > stream_states.csv
+
+
+./programs/timeplusd client -h 127.0.0.1 --port 8463 --user <username> --password <password> --query "WITH sorted_recent_data_points AS
   (
     SELECT
       node_id AS leader_node, database, name, state_string_value AS replication_statuses, replication_statuses:shard::uint32 AS shard, _tp_time AS ts
     FROM
-      table(stream_states)
+      table(system.stream_state_log)
     WHERE
-      (state_name = 'quorum_replication_status') AND NOT (starts_with(name, 'mv_k_') OR starts_with(name, '_k_') OR starts_with(name, 'sink_'))
+      _tp_time > now() - 15m AND (state_name = 'quorum_replication_status') AND (NOT starts_with(name, 'mv_k_')) AND (NOT starts_with(name, '_k_'))
     ORDER BY
       _tp_time DESC
   ), latest_data_point AS
@@ -95,4 +131,16 @@ SELECT
 FROM
   flatten
 ORDER BY
-  database, name, shard, node;
+  database, name, shard, node FORMAT CSV" > rep_lags.csv
+
+--
+
+k@t+ 20250119-logs % rg "<Error> client"  node*.errs | rg "error=(\w+)" -or '$1' | sort | uniq -c | sort -bgr
+3241119 ECANCELED
+4932 EBADF
+3503 EPIPE
+1332 ECONNREFUSED
+ 886 EHOSTUNREACH
+  16 ETIMEDOUT
+  16 EAI_NONAME
+   8 ECONNRESET
