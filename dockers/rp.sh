@@ -10,7 +10,7 @@ docker run --pull=always --name=redpanda --rm \
     --memory 16G \
     --reserve-memory 0M \
     --node-id 0 \
-    --advertise-kafka-addr 192.168.1.100 \
+    --advertise-kafka-addr 192.168.1.115 \
     --set "redpanda.auto_create_topics_enabled=false" \
     --set "redpanda.enable_idempotence=true" \
     --check=false

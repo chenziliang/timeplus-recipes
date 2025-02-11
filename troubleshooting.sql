@@ -132,3 +132,67 @@ FROM
   flatten
 ORDER BY
   database, name, shard, node FORMAT CSV" > rep_lags.csv
+
+
+
+-- Failed materialized view 
+-- If a MV which is not running in last 5 minutes, report error
+CREATE VIEW failed_mvs 
+AS
+WITH running_mvs_in_last_5m AS
+(
+    SELECT
+      database, name
+    FROM
+      system.stream_state_log
+    WHERE
+      (_tp_time > (now() - 5m)) AND (dimension = 'materialized_view') AND (state_name = 'status') AND (state_string_value = 'ExecutingPipeline')
+    ORDER BY _tp_time DESC -- order here to make sure we have the latest state 
+    SETTINGS
+      query_mode = 'table'
+)
+SELECT
+  database, name, state_string_value, _tp_time
+FROM
+  system.stream_state_log
+WHERE
+   (_tp_time > (now() - 5m)) AND (dimension = 'materialized_view') AND (state_name = 'status') AND NOT ((database, name) IN running_mvs_in_last_5m)
+SETTINGS
+  query_mode = 'table';
+
+-- Large lagging >= 1000 MVs in last 5 minutes
+WITH last_5m_progressing_status AS
+(
+  SELECT 
+    database, name, state_name, state_value, _tp_time AS ts
+  FROM 
+    system.stream_state_log
+  WHERE 
+    (_tp_time > (now() - 5m)) AND (state_name IN ('processed_sn', 'end_sn')) 
+  ORDER BY _tp_time DESC
+  SETTINGS
+    query_mode = 'table'
+),
+latest_mv_lagging AS
+(
+  SELECT 
+    database, name, state_name, earliest(state_value) AS state_value, earliest(ts) AS ts
+  FROM 
+    last_5m_progressing_status
+  GROUP BY database, name, state_name
+  ORDER BY database, name, state_name ASC 
+),
+grouped_stats AS
+(
+  SELECT 
+    database, name, group_array(state_name) AS state_names group_array(state_value) AS state_values, earliest(ts) AS ts
+  FROM
+    latest_mv_lagging 
+  GROUP BY database, name
+)
+SELECT database, name, state_names[0] = 'end_sn' ?  state_values[0] : state_values[1] AS end_sn, state_names[1] = 'processed_sn' ?  state_values[1] : state_values[0] AS processed_sn, end_sn - processed_sn AS lag 
+FROM grouped_stats
+WHERE lag >= 1000;
+
+
+
