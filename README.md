@@ -1,1 +1,1 @@
-Recipes to experiment timeplus rapidly
+Recipes to experiment Timeplus rapidly
