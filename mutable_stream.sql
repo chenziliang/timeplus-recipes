@@ -19,7 +19,7 @@ SETTINGS
 -- Data generation
 CREATE RANDOM STREAM r_transactions
 (
-  `id` string default 'id_' || to_string(rand64() % 100000000), 
+  `id` string default 'id_' || to_string(rand64()), 
   `from_id` string default 'from_id_' || to_string(rand64() % 1000000), 
   `to_id` string default 'to_id_' || to_string(rand64() % 1000000), 
   `value` uint64, 
@@ -29,7 +29,7 @@ CREATE RANDOM STREAM r_transactions
 SETTINGS shards = 4;
 
 
--- Populate mutable stream with random data with approx 100 million unique keys 
+-- Populate mutable stream with random data with approximate 100 million keys 
 INSERT INTO transactions(* except(_tp_sn)) SELECT * FROM r_transactions LIMIT 100000000 SETTINGS eps=20e7;
 
 -- Add secondary indexes for different columns for fast point / range query 
@@ -38,6 +38,12 @@ ALTER STREAM transactions ADD INDEX to_idx (to_id); -- secondary index
 ALTER STREAM transactions ADD INDEX ts_idx (_tp_time); -- secondary index 
 
 SELECT * FROM table(transactions) LIMIT 10;
+
+-- Approximate count is fast
+SELECT count() FROM table(transactions) SETTINGS use_approximate_count=true;
+
+-- Accurate count requires coding all keys (slower) 
+SELECT count() FROM table(transactions) SETTINGS use_approximate_count=true;
 
 -- Point query against primary key `id` is fast
 SELECT * FROM table(transactions) WHERE id = 'id_10000006';
