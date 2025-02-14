@@ -42,7 +42,7 @@ SELECT * FROM table(transactions) LIMIT 10;
 -- Approximate count is fast
 SELECT count() FROM table(transactions) SETTINGS use_approximate_count=true;
 
--- Accurate count requires coding all keys (slower) 
+-- Accurate count requires decoding all keys (slower) 
 SELECT count() FROM table(transactions) SETTINGS use_approximate_count=true;
 
 -- Point query against primary key `id` is fast
