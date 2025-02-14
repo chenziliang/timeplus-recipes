@@ -63,4 +63,4 @@ DELETE FROM * transactions WHERE id = 'id_10000006';
 -- Delete by primary key range is usually fast (depending on how much data will be pruned)
 DELETE FROM * transactions WHERE id >= 'id_10000006' and id <= 'id_10000016';
 
--- Similarly delete by secondary key or key range is usualy fast as long as secondary key can be used.
+-- Similarly delete by secondary key or key range is usualy fast as long as scondary index can be used.
