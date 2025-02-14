@@ -56,3 +56,11 @@ SELECT * FROM table(transactions) WHERE from_id = 'from_id_18';
 
 -- Range query against secondary key `from_id` is fast
 SELECT * FROM table(transactions) WHERE from_id >= 'from_id_18' AND from_id <= 'from_id_19' LIMIT 10 SETTINGS limit_hint=10;
+
+-- Delete by priamry key is fast
+DELETE FROM * transactions WHERE id = 'id_10000006';
+
+-- Delete by primary key range is usually fast (depending on how much data will be pruned)
+DELETE FROM * transactions WHERE id >= 'id_10000006' and id <= 'id_10000016';
+
+-- Similarly delete by secondary key or key range is usualy fast as long as secondary key can be used.
