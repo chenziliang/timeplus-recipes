@@ -37,12 +37,41 @@ SETTINGS
 
 -- Replication status / lagging
 
+SELECT
+  event_time, name, shard, replica_node, leader_node, to_int64((replicas_map[leader_node]):next_sn) - to_int64((replicas_map[replica_node]):next_sn) AS lagging
+FROM
+  (
+    SELECT
+      name, shard, latest(_tp_time) AS event_time, latest(leader_node) AS leader_node, array_join(latest(replica_nodes)) AS replica_node, latest(replicas_map) AS replicas_map
+    FROM
+      (
+        SELECT
+          _tp_time, name, state_string_value:shard AS shard, node_id AS leader_node, state_string_value:shard_replication_statuses[*] AS replica_statuses, array_map(x -> to_uint64(x:node), replica_statuses) AS replica_nodes, map_cast(array_map(x -> to_uint64(x:node), replica_statuses), replica_statuses) AS replicas_map
+        FROM
+          system.stream_state_log
+        WHERE
+          (state_name = 'quorum_replication_status')
+        SETTINGS
+          enforce_append_only = true, seek_to = 'latest'
+      )
+    GROUP BY
+      name, shard
+  )
+
+
 CREATE OR REPLACE VIEW streams_replication_lagging
 AS
 WITH recent_replication_statuses AS
-  (
+(
     SELECT
-      node_id AS leader_node, database, name, dimension AS shard, json_extract_array_raw(state_string_value, 'shard_replication_statuses') AS replication_statuses, _tp_time AS ts
+      database,
+      name,
+      state_string_value:shard AS shard, 
+      node_id AS leader_node, 
+      state_string_value:shard_replication_statuses[*] AS replica_statuses, 
+      array_map(x -> to_uint64(x:node), replica_statuses) AS replica_nodes, 
+      map_cast(array_map(x -> to_uint64(x:node), replica_statuses), replica_statuses) AS replicas_map,
+      _tp_time AS ts
     FROM
       system.stream_state_log
     WHERE
@@ -51,29 +80,20 @@ WITH recent_replication_statuses AS
       _tp_time DESC
     SETTINGS
       query_mode = 'table'
-  ), 
+), 
 latest_replication_statuses AS 
 (
   SELECT 
-    database, name, to_int(shard) AS shard, earliest(leader_node) AS leader_node, earliest(replication_statuses) AS replication_statuses, earliest(ts) AS ts 
+    database, name, to_int(shard) AS shard, earliest(leader_node) AS leader_node, array_join(latest(replica_nodes)) AS replica_node, latest(replicas_map) AS replicas_map, earliest(ts) AS ts
   FROM recent_replication_statuses
-  WHERE shard < 1000 
   GROUP BY database, name, shard
-), 
-flatten AS
-  (
-    SELECT
-      leader_node, database, name, shard, array_join(replication_statuses) AS status, ts
-    FROM
-      latest_replication_statuses
-  )
+)
 SELECT
-  database, name, shard, leader_node, to_int(status:node) AS peer_node, status:next_sn AS next_sn, status:replicated_sn AS replicated_sn, status:state AS state, status:append_message_flow_paused AS append_paused, status:inflight_messages AS inflight_messages, status:is_learner AS learner, status:recent_active AS recent_active
+  database, name, shard, leader_node, replica_node, to_int64((replicas_map[leader_node]):next_sn) - to_int64((replicas_map[replica_node]):next_sn) AS lagging, ts
 FROM
-  flatten
-ORDER BY
-  leader, shard ASC;
-
+  latest_replication_statuses
+-- WHERE lagging > 10000
+ORDER BY database, name, shard, replica_node;
 
 
 ./programs/timeplusd client -h 127.0.0.1 --port 8463 --user <username> --password <password> --query "WITH sorted_recent_data_points AS
