@@ -71,17 +71,6 @@ FROM
   sink 
 EMIT PERIODIC 2s;
 
-CREATE MATERIALIZED VIEW current_running_node_eps 
-AS
-SELECT
-  node, count() AS total_events, lag(total_events, 1, 0) AS prev_total_events, (total_events - prev_total_events) / 2 AS eps 
-FROM
-  sink
-GROUP BY
-  node
-ORDER BY node, eps desc
-EMIT PERIODIC 2s;
-
 
 CREATE STREAM cluster 
 (
@@ -93,3 +82,15 @@ CREATE STREAM cluster
     memory_gb uint32,
     memory_usage float32
 );
+
+
+CREATE MATERIALIZED VIEW current_running_node_eps 
+AS
+SELECT
+  node, count() AS total_events, lag(total_events, 1, 0) AS prev_total_events, (total_events - prev_total_events) / 2 AS eps 
+FROM
+  sink
+GROUP BY
+  node
+ORDER BY node, eps desc
+EMIT PERIODIC 2s;

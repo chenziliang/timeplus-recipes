@@ -1,7 +1,7 @@
 #!/bin/bash
 
 docker run --pull=always --name=redpanda --rm \
-    -v /Users/k/code/docker-volume/redpanda:/var/lib/redpanda \
+    -v /Users/k/code/docker-volume/redpanda/data:/var/lib/redpanda/data \
     -p 9092:9092 \
     redpandadata/redpanda \
     start \

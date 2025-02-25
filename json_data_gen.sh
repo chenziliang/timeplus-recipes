@@ -35,7 +35,7 @@ done
 
 echo "Generating data at eps=$eps with total_events=$total_events"
 
-gen_query="SELECT * FROM device_metrics_r LIMIT 10000 FORMAT JSONEachRow SETTINGS eps=$eps"
+gen_query="SELECT * FROM device_metrics_r LIMIT $batch_size FORMAT JSONEachRow SETTINGS eps=$eps"
 insert_query='INSERT INTO source (raw) FORMAT LineAsString;
 
 total_gen=0
