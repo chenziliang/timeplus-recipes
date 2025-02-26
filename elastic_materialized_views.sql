@@ -94,3 +94,37 @@ GROUP BY
   node
 ORDER BY node, eps desc
 EMIT PERIODIC 2s;
+
+
+
+-- scripts
+
+ubuntu@ip-172-31-12-144:~/timeplus$ cat create_mvs.sh 
+
+for i in `seq 0 50`
+do
+	echo "Creating MV mv_$i"
+	./timeplusd client --query "CREATE SCHEDULED MATERIALIZED VIEW IF NOT EXISTS mv_$i INTO sink
+	AS
+	SELECT 
+	    node_id() as node, 
+	    raw:device AS device, 
+	    raw:region, 
+	    raw:lat::float32 AS lat, 
+	    raw:lon::float32 AS lon, 
+	    raw:temperature::float32, 
+	    raw:_tp_time::datetime64 AS _tp_time 
+	FROM source
+	SETTINGS checkpoint_settings='type=auto;storage_type=local_file_system'"
+	sleep 5
+done
+
+
+ubuntu@ip-172-31-12-144:~/timeplus$ cat drop_mvs.sh 
+
+for i in `seq 0 50`
+do
+    echo "Dropping MV mv_$i"
+    ./timeplusd client --query "DROP STREAM IF EXISTS mv_$i" 
+    # sleep 5
+done
