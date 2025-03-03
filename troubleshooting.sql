@@ -58,8 +58,8 @@ FROM
       name, shard
   )
 
-
-CREATE OR REPLACE VIEW streams_replication_lagging
+-- Replication lag > 1000
+CREATE OR REPLACE VIEW v_big_replication_lag_streams
 AS
 WITH recent_replication_statuses AS
 (
@@ -92,8 +92,80 @@ SELECT
   database, name, shard, leader_node, replica_node, to_int64((replicas_map[leader_node]):next_sn) - to_int64((replicas_map[replica_node]):next_sn) AS lagging, ts
 FROM
   latest_replication_statuses
--- WHERE lagging > 10000
-ORDER BY database, name, shard, replica_node;
+WHERE lagging >= 1000;
+
+-- Failed materialized view 
+-- If a MV which is not running in last 5 minutes, report error
+CREATE OR REPLACE VIEW v_failed_mvs 
+AS
+WITH running_mvs_in_last_5m AS
+(
+    SELECT
+      database, name
+    FROM
+      system.stream_state_log
+    WHERE
+      (_tp_time > (now() - 5m)) AND (dimension = 'materialized_view') AND (state_name = 'status') AND (state_string_value = 'ExecutingPipeline')
+    ORDER BY _tp_time DESC -- order here to make sure we have the latest state 
+    SETTINGS
+      query_mode = 'table'
+)
+SELECT
+  database, name, state_string_value, _tp_time
+FROM
+  system.stream_state_log
+WHERE
+   (_tp_time > (now() - 5m)) AND (dimension = 'materialized_view') AND (state_name = 'status') AND NOT ((database, name) IN running_mvs_in_last_5m)
+SETTINGS
+  query_mode = 'table';
+
+-- MVs with lagging >= 1000 for all sources in last 5 minutes
+CREATE OR REPLACE VIEW v_big_lag_mvs
+AS
+WITH last_5m_progressing_status AS
+(
+  SELECT 
+    database, name, state_name, dimension, state_value, _tp_time AS ts
+  FROM 
+    system.stream_state_log
+  WHERE 
+    (_tp_time > (now() - 5m)) AND (state_name IN ('processed_sn', 'end_sn')) 
+  ORDER BY _tp_time DESC -- order here to make sure we have latest state
+  SETTINGS
+    query_mode = 'table'
+),
+latest_mv_lagging_per_source AS
+(
+  SELECT 
+    database, name, state_name, latest(state_value) AS state_value, earliest(ts) AS ts
+  FROM 
+    last_5m_progressing_status
+  GROUP BY database, name, state_name, dimension
+),
+mv_lagging_aggr_per_state AS
+( -- Aggregate all sources
+  SELECT 
+    database, name, state_name, sum(state_value) AS state_value, earliest(ts) AS ts
+  FROM 
+    last_5m_progressing_status
+  GROUP BY database, name, state_name
+),
+mv_lagging_aggr_per_mv AS
+(
+  SELECT 
+    database, name, group_array(state_name) AS state_names, group_array(state_value) AS state_values, earliest(ts) AS ts
+  FROM
+    mv_lagging_aggr_per_state 
+  GROUP BY database, name
+)
+SELECT 
+  database, name, 
+  state_names[1] = 'end_sn' ?  state_values[1] : state_values[2] AS end_sn, 
+  state_names[2] = 'processed_sn' ?  state_values[2] : state_values[1] AS processed_sn, 
+  end_sn - processed_sn AS lag, 
+  ts 
+FROM mv_lagging_aggr_per_mv
+WHERE lag >= 1000;
 
 
 ./programs/timeplusd client -h 127.0.0.1 --port 8463 --user <username> --password <password> --query "WITH sorted_recent_data_points AS
@@ -151,77 +223,3 @@ FROM
   flatten
 ORDER BY
   database, name, shard, node FORMAT CSV" > rep_lags.csv
-
-
--- Failed materialized view 
--- If a MV which is not running in last 5 minutes, report error
-CREATE OR REPLACE  v_failed_mvs 
-AS
-WITH running_mvs_in_last_5m AS
-(
-    SELECT
-      database, name
-    FROM
-      system.stream_state_log
-    WHERE
-      (_tp_time > (now() - 5m)) AND (dimension = 'materialized_view') AND (state_name = 'status') AND (state_string_value = 'ExecutingPipeline')
-    ORDER BY _tp_time DESC -- order here to make sure we have the latest state 
-    SETTINGS
-      query_mode = 'table'
-)
-SELECT
-  database, name, state_string_value, _tp_time
-FROM
-  system.stream_state_log
-WHERE
-   (_tp_time > (now() - 5m)) AND (dimension = 'materialized_view') AND (state_name = 'status') AND NOT ((database, name) IN running_mvs_in_last_5m)
-SETTINGS
-  query_mode = 'table';
-
--- MVs with lagging >= 1000 for all sources in last 5 minutes
-CREATE OR REPLACE v_big_lag_mvs
-AS
-WITH last_5m_progressing_status AS
-(
-  SELECT 
-    database, name, state_name, dimension, state_value, _tp_time AS ts
-  FROM 
-    system.stream_state_log
-  WHERE 
-    (_tp_time > (now() - 5m)) AND (state_name IN ('processed_sn', 'end_sn')) 
-  ORDER BY _tp_time DESC -- order here to make sure we have latest state
-  SETTINGS
-    query_mode = 'table'
-),
-latest_mv_lagging_per_source AS
-(
-  SELECT 
-    database, name, state_name, latest(state_value) AS state_value, earliest(ts) AS ts
-  FROM 
-    last_5m_progressing_status
-  GROUP BY database, name, state_name, dimension
-),
-mv_lagging_aggr_per_state AS
-( -- Aggregate all sources
-  SELECT 
-    database, name, state_name, sum(state_value) AS state_value, earliest(ts) AS ts
-  FROM 
-    last_5m_progressing_status
-  GROUP BY database, name, state_name
-),
-mv_lagging_aggr_per_mv AS
-(
-  SELECT 
-    database, name, group_array(state_name) AS state_names, group_array(state_value) AS state_values, earliest(ts) AS ts
-  FROM
-    mv_lagging_aggr_per_state 
-  GROUP BY database, name
-)
-SELECT 
-  database, name, 
-  state_names[1] = 'end_sn' ?  state_values[1] : state_values[2] AS end_sn, 
-  state_names[2] = 'processed_sn' ?  state_values[2] : state_values[1] AS processed_sn, 
-  end_sn - processed_sn AS lag, 
-  ts 
-FROM mv_lagging_aggr_per_mv
-WHERE lag >= 1000;

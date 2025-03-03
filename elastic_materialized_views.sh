@@ -26,7 +26,7 @@ done
 
 ubuntu@ip-172-31-12-144:~/timeplus$ cat drop_mvs.sh 
 
-for i in `seq 0 50`
+for i in `seq 1 50`
 do
     echo "Dropping MV mv_$i"
     ./timeplusd client --query "DROP STREAM IF EXISTS mv_$i" 
@@ -36,7 +36,7 @@ done
 
 # Fresh cluster 
 
-ubuntu@ip-172-31-12-144:~/timeplus$ cat cluster.sh 
+ubuntu@ip-172-31-12-144:~/timeplus$ cat fresh_cluster.sh 
 #!/bin/bash
 
 finish() 
