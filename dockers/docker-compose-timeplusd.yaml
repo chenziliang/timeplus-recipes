@@ -9,8 +9,24 @@ services:
      - "5432:5432" # Postgres Snapshot
      - "7587:7587" # TCP Snapshot
      - "9444:9444" # kv service 
-    entrypoint: >
-      /bin/bash -c "sed -i'' 's#::1#::/0#g' /etc/timeplusd-server/users.yaml && sed -i'' 's/- ip: 127.0.0.1//g' /etc/timeplusd-server/users.yaml && sed -i'' '/kv_service:/{N;s/\n\(.\+\)false/\n\1true/}' /etc/timeplusd-server/config.yaml && sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Fix user access network
+        sed -i'' 's#::1#::/0#g' /etc/timeplusd-server/users.yaml
+        sed -i'' 's/- ip: 127.0.0.1//g' /etc/timeplusd-server/users.yaml 
+
+        # Enable kv_service
+        sed -i'' '/^kv_service:/{N;s/\n\(.\+\)false/\n\1true/}' /etc/timeplusd-server/config.yaml
+
+        # Fix others
+        sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml 
+        
+        # Launch timeplusd 
+        /entrypoint.sh
+
     environment:
       - MAX_CONCURRENT_QUERIES=1000        # Default: 100
       - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
@@ -35,14 +51,34 @@ services:
       core: -1
     cap_add:
       - SYS_PTRACE
+
   t2:
     image: timeplus/timeplusd:2.8.8
     container_name: timeplusd-meta-2
     ports:
      - "18463:8463"
      - "13218:3218"
-    entrypoint: >
-      /bin/bash -c "sed -i'' 's#::1#::/0#g' /etc/timeplusd-server/users.yaml && sed -i'' 's/- ip: 127.0.0.1//g' /etc/timeplusd-server/users.yaml && sed -i'' 's/id: 1/id: 2/g' /etc/timeplusd-server/config.yaml && sed -i'' '/kv_service:/{N;s/\n\(.\+\)false/\n\1true/}' /etc/timeplusd-server/config.yaml && sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Fix user access network
+        sed -i'' 's#::1#::/0#g' /etc/timeplusd-server/users.yaml
+        sed -i'' 's/- ip: 127.0.0.1//g' /etc/timeplusd-server/users.yaml 
+
+        # Enable kv_service
+        sed -i'' '/^kv_service:/{N;s/\n\(.\+\)false/\n\1true/}' /etc/timeplusd-server/config.yaml
+
+        # Fix node id for kv_service
+        sed -i'' 's/id: 1/id: 2/g' /etc/timeplusd-server/config.yaml 
+
+        # Fix others
+        sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml 
+        
+        # Launch timeplusd 
+        /entrypoint.sh
+
     environment:
       - MAX_CONCURRENT_QUERIES=1000        # Default: 100
       - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
@@ -65,14 +101,34 @@ services:
       - timeplusd_data_2:/var/lib
     ulimits:
       core: -1
+
   t3:
     image: timeplus/timeplusd:2.8.8
     container_name: timeplusd-meta-3
     ports:
      - "28463:8463"
      - "23218:3218"
-    entrypoint: >
-      /bin/bash -c "sed -i'' 's#::1#::/0#g' /etc/timeplusd-server/users.yaml && sed -i'' 's/- ip: 127.0.0.1//g' /etc/timeplusd-server/users.yaml && sed -i'' 's/id: 1/id: 2/g' /etc/timeplusd-server/config.yaml && sed -i'' '/kv_service:/{N;s/\n\(.\+\)false/\n\1true/}' /etc/timeplusd-server/config.yaml && sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Fix user access network
+        sed -i'' 's#::1#::/0#g' /etc/timeplusd-server/users.yaml
+        sed -i'' 's/- ip: 127.0.0.1//g' /etc/timeplusd-server/users.yaml 
+
+        # Enable kv_service
+        sed -i'' '/^kv_service:/{N;s/\n\(.\+\)false/\n\1true/}' /etc/timeplusd-server/config.yaml
+
+        # Fix node id for kv_service
+        sed -i'' 's/id: 1/id: 3/g' /etc/timeplusd-server/config.yaml 
+
+        # Fix others
+        sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml 
+        
+        # Launch timeplusd 
+        /entrypoint.sh
+
     environment:
       - MAX_CONCURRENT_QUERIES=1000        # Default: 100
       - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
