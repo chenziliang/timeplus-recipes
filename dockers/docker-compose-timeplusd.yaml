@@ -151,13 +151,25 @@ services:
       - timeplusd_data_3:/var/lib
     ulimits:
       core: -1
+
   p1:
     image: timeplus/timeplusd:2.8.8
     container_name: timeplusd-compute-1
     ports:
      - "38463:8463" # TCP Streaming
-    entrypoint: >
-      /bin/bash -c "sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Compute role
+        sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml
+        sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml
+        sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml 
+
+        # Launch timeplusd
+        /entrypoint.sh
+
     environment:
       - MAX_CONCURRENT_QUERIES=1000        # Default: 100
       - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
@@ -180,13 +192,25 @@ services:
       - timeplusd_data_11:/var/lib
     ulimits:
       core: -1
+
   p2:
     image: timeplus/timeplusd:2.8.8
     container_name: timeplusd-compute-2
     ports:
      - "48463:8463" # TCP Streaming
-    entrypoint: >
-      /bin/bash -c "sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Compute role
+        sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml
+        sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml 
+
+        # Launch timeplusd
+        /entrypoint.sh
+
     environment:
       - MAX_CONCURRENT_QUERIES=1000        # Default: 100
       - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
@@ -209,13 +233,24 @@ services:
       - timeplusd_data_22:/var/lib
     ulimits:
       core: -1
+
   p3:
     image: timeplus/timeplusd:2.8.8
     container_name: timeplusd-data-1
     ports:
       - "58483:8463" # TCP Streaming
-    entrypoint: >
-      /bin/bash -c "sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # Data role
+        sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml
+        sed -i'' 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml 
+        sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml 
+
+        # Launch timeplusd
+        /entrypoint.sh
+
     environment:
       - MAX_CONCURRENT_QUERIES=1000        # Default: 100
       - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
