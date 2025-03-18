@@ -1,0 +1,301 @@
+services:
+  p1:
+    image: timeplus/timeplusd:2.8.8
+    container_name: proton-server11
+    ports:
+     - "13218:3218" # HTTP Streaming
+     - "18123:8123" # HTTP Snapshot
+     - "18463:8463" # TCP Streaming
+     - "15432:5432" # Postgres Snapshot
+     - "17587:7587" # TCP Snapshot
+    entrypoint: >
+      /bin/bash -c "sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml && sed -i 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/level: information/level: debug/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    environment:
+      - MAX_CONCURRENT_QUERIES=1000        # Default: 100
+      - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
+      - MAX_CONCURRENT_INSERT_QUERIES=1000     # Default: 100
+      - MAX_CONCURRENT_STREAMING_QUERIES=1000   # Default: 100
+      - MAX_SERVER_MEMORY_USAGE_TO_RAM_RATIO=0.3 # Default: 0.9
+      - MAX_SERVER_MEMORY_CACHE_TO_RAM_RATIO=0.2 # Default: 0.5
+      - ADVERTISED_HOST=proton-server11
+      - METADATA_NODE_QUORUM="timeplus-server1:8464,timeplus-server2:8464,timeplus-server3:8464"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"   # Limit to 4 CPU cores
+          memory: "5g"  # Limit memory to 8 GB
+        reservations:
+          cpus: "1.0"   # Reserve 1 CPU core
+          memory: "2g"  # Reserve 2 GB of memory
+    volumes:
+      - /home/ubuntu/dump:/coredumps
+      - timeplusd_data_1:/var/lib
+    ulimits:
+      core: -1
+  p2:
+    image: timeplus/timeplusd:2.8.8
+    container_name: proton-server12
+    ports:
+     - "13228:3218" # HTTP Streaming
+     - "18133:8123" # HTTP Snapshot
+     - "18473:8463" # TCP Streaming
+     - "15442:5432" # Postgres Snapshot
+     - "17597:7587" # TCP Snapshot
+    entrypoint: >
+      /bin/bash -c "sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml && sed -i 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/level: information/level: debug/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    environment:
+      - MAX_CONCURRENT_QUERIES=1000        # Default: 100
+      - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
+      - MAX_CONCURRENT_INSERT_QUERIES=1000     # Default: 100
+      - MAX_CONCURRENT_STREAMING_QUERIES=1000   # Default: 100
+      - MAX_SERVER_MEMORY_USAGE_TO_RAM_RATIO=0.3 # Default: 0.9
+      - MAX_SERVER_MEMORY_CACHE_TO_RAM_RATIO=0.2 # Default: 0.5
+      - ADVERTISED_HOST=proton-server12
+      - METADATA_NODE_QUORUM="timeplus-server1:8464,timeplus-server2:8464,timeplus-server3:8464"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"   # Limit to 4 CPU cores
+          memory: "4g"  # Limit memory to 8 GB
+        reservations:
+          cpus: "1.0"   # Reserve 1 CPU core
+          memory: "2g"  # Reserve 2 GB of memory
+    volumes:
+      - /home/ubuntu/dump:/coredumps
+      - timeplusd_data_2:/var/lib
+    ulimits:
+      core: -1
+  p3:
+    image: timeplus/timeplusd:2.8.8
+    container_name: proton-server13
+    ports:
+      - "13238:3218" # HTTP Streaming
+      - "18143:8123" # HTTP Snapshot
+      - "18483:8463" # TCP Streaming
+      - "15452:5432" # Postgres Snapshot
+      - "17507:7587" # TCP Snapshot
+    entrypoint: >
+      /bin/bash -c "sed -i'' 's/\- Data/\- Compute/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/\- Metadata//g' /etc/timeplusd-server/config.yaml && sed -i 's/\bcount: 10\b/count: 100/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/preallocate: true/preallocate: false/g' /etc/timeplusd-server/config.yaml && sed -i'' 's/level: information/level: debug/g' /etc/timeplusd-server/config.yaml && /entrypoint.sh"
+    environment:
+      - MAX_CONCURRENT_QUERIES=1000        # Default: 100
+      - MAX_CONCURRENT_SELECT_QUERIES=1000     # Default: 100
+      - MAX_CONCURRENT_INSERT_QUERIES=1000     # Default: 100
+      - MAX_CONCURRENT_STREAMING_QUERIES=1000   # Default: 100
+      - MAX_SERVER_MEMORY_USAGE_TO_RAM_RATIO=0.3 # Default: 0.9
+      - MAX_SERVER_MEMORY_CACHE_TO_RAM_RATIO=0.2 # Default: 0.5
+      - ADVERTISED_HOST=proton-server13
+      - METADATA_NODE_QUORUM="timeplus-server1:8464,timeplus-server2:8464,timeplus-server3:8464"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"   # Limit to 4 CPU cores
+          memory: "6g"  # Limit memory to 8 GB
+        reservations:
+          cpus: "1.0"   # Reserve 1 CPU core
+          memory: "2g"  # Reserve 2 GB of memory
+    volumes:
+      - /home/ubuntu/dump:/coredumps
+      - timeplusd_data_3:/var/lib
+    ulimits:
+      core: -1
+  t1:
+    container_name: timeplus-server1
+    image: timeplus/timeplus-enterprise:2.8.0-rc.1
+    ports:
+      - "8000:8000"
+      - "8463:8463"
+      - "3218:3218"
+    environment:
+      - ADVERTISED_HOST=timeplus-server1
+      - METADATA_NODE_QUORUM=timeplus-server1:8464,timeplus-server2:8464,timeplus-server3:8464
+      - ENABLE_AUTHENTICATION=true
+      - TIMEPLUSD_ADMIN_PASSWORD=Password!
+      - TIMEPLUSD_REPLICAS=3
+      - ENABLE_DATA_PREALLOCATE=false
+    volumes:
+      - timeplus_data_1:/timeplus/data/
+      - /home/ubuntu/dump:/coredumps
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3218/proton/ping"]
+      interval: 2s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  t2:
+    container_name: timeplus-server2
+    image: timeplus/timeplus-enterprise:2.8.0-rc.1
+    ports:
+      - "8464:8463"
+      - "3219:3218"
+    entrypoint: >
+      /bin/bash -c "timeplus start -s timeplusd && tail -f /timeplus/logs/timeplusd-server.log"
+    environment:
+      - ADVERTISED_HOST=timeplus-server2
+      - METADATA_NODE_QUORUM=timeplus-server1:8464,timeplus-server2:8464,timeplus-server3:8464
+      - TIMEPLUSD_ADMIN_PASSWORD=Password!
+      - ENABLE_DATA_PREALLOCATE=false
+    volumes:
+      - timeplus_data_2:/timeplus/data/
+      - /home/ubuntu/dump:/coredumps
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3218/proton/ping"]
+      interval: 2s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  t3:
+    image: timeplus/timeplus-enterprise:2.8.0-rc.1
+    ports:
+      - "8465:8463"
+      - "3220:3218"
+    entrypoint: >
+      /bin/bash -c "timeplus start -s timeplusd && tail -f /timeplus/logs/timeplusd-server.log"
+    environment:
+      - ADVERTISED_HOST=timeplus-server3
+      - METADATA_NODE_QUORUM=timeplus-server1:8464,timeplus-server2:8464,timeplus-server3:8464
+      - TIMEPLUSD_ADMIN_PASSWORD=Password!
+      - ENABLE_DATA_PREALLOCATE=false
+    volumes:
+      - timeplus_data_3:/timeplus/data/
+      - /home/ubuntu/dump:/coredumps
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3218/proton/ping"]
+      interval: 2s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    container_name: timeplus-server3
+  k1:
+    image: redpandadata/redpanda:latest
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+      - "18081:18081"
+      - "18082:18082"
+      - "19092:19092"
+      - "19644:9644"
+      - "38197:38197"
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --memory
+      - 1G
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://broker1:29092,OUTSIDE://broker1:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://broker1:29092,OUTSIDE://broker1:9092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      # Redpanda brokers use the RPC API to communicate with each other internally.
+      - --rpc-addr broker1:33145
+      - --advertise-rpc-addr broker1:33145
+      - --set
+      - "redpanda.auto_create_topics_enabled=false"
+      - --set
+      - "redpanda.enable_idempotence=true"
+      - --check=false
+    container_name: broker1
+  kafka-uis:
+    container_name: kafka-ui
+    image: 'docker.redpanda.com/redpandadata/console:v2.5.2'
+    depends_on:
+      - k1
+    ports:
+      - "8082:8080"
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      KAFKA_BROKERS: 'broker1:9092'
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["broker1:9092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://broker1:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://broker1:9644"]
+  pulsar:
+    image: apachepulsar/pulsar:3.3.1
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+    command: ["bin/pulsar", "standalone"]
+    environment:
+      PULSAR_MEM: "-Xms2g -Xmx4g -XX:MaxDirectMemorySize=4g"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"   # Limit to 2 CPU cores
+          memory: "4g"  # Limit memory to 4 GB
+        reservations:
+          cpus: "1.0"   # Reserve 1 CPU core
+          memory: "2g"  # Reserve 2 GB of memory
+    container_name: pulsar
+  clickhouse:
+    image: 'clickhouse/clickhouse-server:${CHVER:-latest}'
+    user: '101:101'
+    container_name: clickhouse
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=password
+    hostname: clickhouse
+    ports:
+      - '127.0.0.1:8223:8123'
+      - '127.0.0.1:9000:9000'
+  mysql:
+    image: mysql:5.7 # Replace with your desired MySQL version
+    container_name: mysql-standalone
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword # Change to a strong password
+      MYSQL_DATABASE: exampledb         # Optional: Pre-create a database
+      MYSQL_USER: exampleuser           # Optional: Create a user
+      MYSQL_PASSWORD: examplepassword   # Optional: Set user password
+    volumes:
+      - mysql-data:/var/lib/mysql       # Persistent storage for MySQL data
+    restart: unless-stopped
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9100:9000"      # MinIO server port
+      - "9001:9001"      # Console port
+    volumes:
+      - minio_data:/data # Persistent storage for MinIO
+    environment:
+      MINIO_ROOT_USER: "minioadmin"       # Replace with your desired root user
+      MINIO_ROOT_PASSWORD: "minioadmin123" # Replace with a strong password
+    command: server /data --console-address ":9001"
+
+volumes:
+  minio_data:
+  timeplusd_data_1:
+    driver: local
+  timeplusd_data_2:
+    driver: local
+  timeplusd_data_3:
+    driver: local
+  timeplus_data_1:
+    driver: local
+  timeplus_data_2:
+    driver: local
+  timeplus_data_3:
+    driver: local
+  mysql-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./mysql-data
+
