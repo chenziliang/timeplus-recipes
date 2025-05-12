@@ -16,3 +16,5 @@ ORDER BY s;
 CREATE TABLE rmt_d 
 ENGINE = Distributed(cluster1, test_db, rmt, cityHash64('s'));
 
+
+SELECT count() FROM rmt_d WHERE i > 2 SETTINGS allow_experimental_analyzer=false;
