@@ -1,12 +1,5 @@
 -- Analyze Open Telemetry Trace Outliers
 
-CREATE STREAM trace_outliers
-(
-    trace_id string,
-    span_ms uint32,
-    trace_events array(string)
-);
-
 CREATE EXTERNAL STREAM splunk
 (
     event string,
@@ -17,41 +10,36 @@ SETTINGS type='http', url='http://127.0.0.1:8088/services/collector', http_heade
 
 CREATE MATERIALIZED VIEW trace_outliers_mv INTO splunk
 AS
-SELECT
-    trace_id,
-    date_diff('ms', min(start_time), max(end_time)) AS span_ms,
-    group_array(json_encode(span_id, parent_span_id, name, attributes)) AS trace_events
-FROM otel_traces
-GROUP BY trace_id
-EMIT AFTER KEY EXPIRE IDENTIFIED BY end_time WITH ONLY MAXSPAN 500ms AND TIMEOUT 2s
-SETTINGS default_hash_table='hybrid', max_hot_keys=1000000, allow_independent_shard_processing=true;
-
-
-CREATE MATERIALIZED VIEW trace_outliers_mv INTO trace_outliers
-AS
-SELECT
-    trace_id,
-    date_diff('ms', min(start_time), max(end_time)) AS span_ms,
-    group_array(json_encode(span_id, parent_span_id, name, attributes)) AS trace_events
-FROM otel_traces
-GROUP BY trace_id
-EMIT AFTER KEY EXPIRE IDENTIFIED BY end_time WITH ONLY MAXSPAN 500ms AND TIMEOUT 2s
-SETTINGS default_hash_table='hybrid', max_hot_keys=1000000, allow_independent_shard_processing=true;
-
-CREATE STREAM grouped_traces
+WITH outliers AS
 (
-    trace_id string,
-    span_ms uint32,
-    trace_events array(string))
-);
+    SELECT
+        trace_id,
+        min(start_time) AS start_ts,
+        max(end_time) AS end_ts,
+        date_diff('ms', start_ts, end_ts) AS span_ms,
+        group_array(json_encode(span_id, parent_span_id, name, start_ts, end_ts, attributes)) AS trace_events
+    FROM otel_traces
+    GROUP BY trace_id
+    EMIT AFTER KEY EXPIRE IDENTIFIED BY end_time WITH ONLY MAXSPAN 500ms AND TIMEOUT 2s
+)
+SELECT json_encode(trace_id, start_ts, end_ts, span_ms, trace_events) AS event
+FROM outliers
+SETTINGS default_hash_table='hybrid', max_hot_keys=1000000, allow_independent_shard_processing=true
 
-CREATE MATERIALIZED VIEW group_traces_mv INTO grouped_traces
+CREATE MATERIALIZED VIEW group_traces_mv INTO splunk
 AS
-SELECT
-    trace_id,
-    date_diff('ms', min(start_time), max(end_time)) AS span_ms,
-    group_array(json_encode(span_id, parent_span_id, name, attributes)) AS trace_events
-FROM otel_traces
-GROUP BY trace_id
-EMIT AFTER KEY EXPIRE IDENTIFIED BY end_time WITH MAXSPAN 500ms AND TIMEOUT 2s
-SETTINGS default_hash_table='hybrid', max_hot_keys=1000000, allow_independent_shard_processing=true;
+WITH groupped AS
+(
+    SELECT
+        trace_id,
+        min(start_time) AS start_ts,
+        max(end_time) AS end_ts,
+        date_diff('ms', start_ts, end_ts) AS span_ms,
+        group_array(json_encode(span_id, parent_span_id, name, start_ts, end_ts, attributes)) AS trace_events
+    FROM otel_traces
+    GROUP BY trace_id
+    EMIT AFTER KEY EXPIRE IDENTIFIED BY end_time WITH MAXSPAN 500ms AND TIMEOUT 2s
+)
+SELECT json_encode(trace_id, start_ts, end_ts, span_ms, trace_events) AS event
+FROM groupped
+SETTINGS default_hash_table='hybrid', max_hot_keys=1000000, allow_independent_shard_processing=true
