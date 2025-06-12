@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: timeplus
+  labels:
+    name: timeplus
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: timeplusd
+  namespace: timeplus
+  labels:
+    app: timeplusd
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: timeplusd
+  namespace: timeplus
+  labels:
+    app: timeplusd
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: timeplusd
+  namespace: timeplus
+  labels:
+    app: timeplusd-svc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: timeplusd
+subjects:
+- kind: ServiceAccount
+  name: timeplusd
+  namespace: timeplus
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timeplus-web-lb
+  namespace: timeplus
+  labels:
+    app: timeplus-web
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  selector:
+    app.kubernetes.io/component: timeplus-appserver
+    app.kubernetes.io/instance: timeplus
+    app.kubernetes.io/name: timeplus-enterprise
+  type: LoadBalancer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timeplusd-lb
+  namespace: timeplus
+  labels:
+    app: timeplusd
+spec:
+  ports:
+  - port: 8463
+    targetPort: 8463
+    protocol: TCP
+    name: native
+  - port: 8123
+    targetPort: 8123
+    name: http
+  selector:
+    app.kubernetes.io/component: timeplusd
+    app.kubernetes.io/instance: timeplus
+    app.kubernetes.io/name: timeplus-enterprise
+  type: LoadBalancer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timeplusd-headless
+  namespace: timeplus
+  labels:
+    app: timeplusd
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  ports:
+  - port: 8463
+    targetPort: 8463
+    name: native
+  - port: 8123
+    targetPort: 8123
+    name: http
+  publishNotReadyAddresses: true
+  clusterIP: None
+  selector:
+    app.kubernetes.io/component: timeplusd
+    app.kubernetes.io/instance: timeplus
+    app.kubernetes.io/name: timeplus-enterprise
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: timeplus-web-headless
+  namespace: timeplus
+  labels:
+    app: timeplus-web
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  publishNotReadyAddresses: true
+  clusterIP: None
+  selector:
+    app.kubernetes.io/component: timeplus-appserver
+    app.kubernetes.io/instance: timeplus
+    app.kubernetes.io/name: timeplus-enterprise
+
+---
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: timeplusd-budget
+  namespace: timeplus
+  labels:
+    app: timeplusd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: timeplusd
+      app.kubernetes.io/instance: timeplus
+      app.kubernetes.io/name: timeplus-enterprise
+  maxUnavailable: 1
+
