@@ -48,7 +48,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: timeplusd
-  namespace: default
+  namespace: timeplus 
 
 ---
 
