@@ -6,6 +6,10 @@ timeplusd:
   initJob:
     image: timeplus/timeplusd
     tag: 2.9.9-rc.9
+
+  image: timeplus/timeplusd
+  tag: 2.9.9-rc.9
+
   replicas: 3
   storage:
     stream:

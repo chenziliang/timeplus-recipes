@@ -58,52 +58,19 @@ helm search repo timeplus -l
 export NS=timeplus
 kubectl create ns $NS
 
-vim values.yaml
-```
-timeplusd:
-  replicas: 3
-  storage:
-    stream:
-      className: local-path
-      size: 20Gi
-      # Keep this to be `null` if you are on Amazon EKS with EBS CSI controller.
-      # Otherwise please carefully check your provisioner and set them properly.
-      selector: false
-      nativelogSubPath: ./nativelog
-      metastoreSubPath: ./metastore
-    history:
-      className: local-path
-      size: 50Gi
-      selector: false 
-      subPath: ./history
-    log:
-      # This log PV is optional. If you have log collect service enabled on your k8s cluster, you can set this to be false.
-      # If log PV is disabled, the log file will be gone after pod restarts.
-      enabled: true
-      className: local-path
-      size: 10Gi
-      selector: false 
-      subPath: ./log
-  defaultAdminPassword: timeplusd@t+
-  resources:
-    limits:
-      cpu: "3"
-      memory: "7Gi"
-    requests:
-      cpu: "2"
-      memory: "6Gi"
-```
-
 sudo chmod 666 /etc/rancher/k3s/k3s.yaml
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 export RELEASE=timeplus
-helm -n $NS install -f values.yaml $RELEASE timeplus/timeplus-enterprise
+export VERSION=v7.0.4
+
+helm -n $NS install -f values.yaml $RELEASE timeplus/timeplus-enterprise --version $VERSION
 
 kubectl port-forward --address 0.0.0.0 svc/timeplus-appserver -n timeplus 8000:8000
 
 multipass list # To get the node ipaddress and the logon Timepus UI by using that address
 
+kubectl get pods -n timeplus
 kubectl delete pod timeplusd-0 -n timeplus
 kubectl logs -f timeplusd-0 -n timeplus
 
