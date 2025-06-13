@@ -3,12 +3,17 @@ kind: Schedule
 metadata:
   name: schedule-pod-failure
 spec:
-  schedule: '*/2 * * * *'
+  schedule: '*/1 * * * *'
   type: PodChaos
   concurrencyPolicy: 'Allow'
   podChaos:
     action: pod-failure
     mode: one
-    duration: 1m
+    duration: 30s 
     selector:
-      namespaces: [timeplus]
+      namespaces:
+        - timeplus
+      labelSelectors:
+        app.kubernetes.io/component: timeplusd
+        app.kubernetes.io/instance: timeplus
+        app.kubernetes.io/name: timeplus-enterprise

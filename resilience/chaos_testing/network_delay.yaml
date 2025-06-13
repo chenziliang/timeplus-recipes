@@ -7,7 +7,11 @@ spec:
   mode: one
   selector:
     namespaces:
-      - timeplus 
+      - timeplus
+    labelSelectors:
+      app.kubernetes.io/component: timeplusd
+      app.kubernetes.io/instance: timeplus
+      app.kubernetes.io/name: timeplus-enterprise
   delay:
     latency: 10ms
     jitter: 100ms

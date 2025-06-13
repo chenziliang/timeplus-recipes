@@ -6,7 +6,12 @@ metadata:
 spec:
   mode: one
   selector:
-    namespaces: [timeplus]
+    namespaces:
+      - timeplus
+    labelSelectors:
+      app.kubernetes.io/component: timeplusd
+      app.kubernetes.io/instance: timeplus
+      app.kubernetes.io/name: timeplus-enterprise
   timeOffset: -10m
   containerNames: [timeplusd]
   clockIds: ["CLOCK_REALTIME", "CLOCK_MONOTONIC"]

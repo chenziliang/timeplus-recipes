@@ -4,7 +4,12 @@ metadata:
  name: network-corruption
 spec:
  selector:
-   namespaces: [timeplus]
+  namespaces:
+    - timeplus
+  labelSelectors:
+    app.kubernetes.io/component: timeplusd
+    app.kubernetes.io/instance: timeplus
+    app.kubernetes.io/name: timeplus-enterprise
  mode: one
  action: corrupt
  corrupt:
