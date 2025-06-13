@@ -128,3 +128,10 @@ kubectl delete -f resilience/chaos_testing/manifests/chaos_mesh/time_fault.yaml
 ```
 
 ## Disk fault -- not support yet
+
+
+# Unstall
+
+```
+helm -n $NS uninstall $RELEASE
+```

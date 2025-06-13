@@ -1,4 +1,11 @@
+timeplusAppserver:
+  image: timeplus/timeplus-appserver
+  tag: 2.9.25
+
 timeplusd:
+  initJob:
+    image: timeplus/timeplusd
+    tag: 2.9.9-rc.9
   replicas: 3
   storage:
     stream:
@@ -30,3 +37,6 @@ timeplusd:
     requests:
       cpu: "2"
       memory: "6Gi"
+  config:
+    node_liveness:
+       heartbeat_interval_ms: 2000
