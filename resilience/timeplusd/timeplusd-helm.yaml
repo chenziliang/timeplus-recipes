@@ -1,6 +1,6 @@
 timeplusAppserver:
   image: timeplus/timeplus-appserver
-  tag: 2.9.25
+  tag: 2.9.26
 
 timeplusd:
   initJob:
