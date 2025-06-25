@@ -1,0 +1,15 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos 
+metadata:
+  name: crash-one-pod 
+spec:
+  action: pod-failure
+  mode: one
+  duration: 30s 
+  selector:
+    namespaces:
+      - timeplus
+    labelSelectors:
+      app.kubernetes.io/component: timeplusd
+      app.kubernetes.io/instance: timeplus
+      app.kubernetes.io/name: timeplus-enterprise
