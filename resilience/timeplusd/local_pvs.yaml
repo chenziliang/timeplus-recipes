@@ -1,0 +1,300 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-stream-pv-0
+  labels:
+    app: timeplusd-data-stream
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-stream-0
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-0 
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-history-pv-0
+  labels:
+    app: timeplusd-data-history
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-history-0
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-log-pv-0
+  labels:
+    app: timeplusd-log
+spec:
+  capacity:
+    storage: "10Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-log-0
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-0
+
+---
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-stream-pv-1
+  labels:
+    app: timeplusd-data-stream
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-stream-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-history-pv-1
+  labels:
+    app: timeplusd-data-history
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-history-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-log-pv-1
+  labels:
+    app: timeplusd-log
+spec:
+  capacity:
+    storage: "10Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-log-1
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-1
+
+---
+---
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-stream-pv-2
+  labels:
+    app: timeplusd-data-stream
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-stream-2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-2
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-history-pv-2
+  labels:
+    app: timeplusd-data-history
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-history-2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-2
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-log-pv-2
+  labels:
+    app: timeplusd-log
+spec:
+  capacity:
+    storage: "10Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-log-2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-2
+
+
+---
+---
+---
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-stream-pv-3
+  labels:
+    app: timeplusd-data-stream
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-stream-3
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-3
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-data-history-pv-3
+  labels:
+    app: timeplusd-data-history
+spec:
+  capacity:
+    storage: "100Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-data-history-3
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-3
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: timeplusd-log-pv-3
+  labels:
+    app: timeplusd-log
+spec:
+  capacity:
+    storage: "10Gi"
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  local:
+    path: /var/lib/timeplus/timeplusd-log-3
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - k3d-local-agent-3
