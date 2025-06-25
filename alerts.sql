@@ -8,7 +8,6 @@ $$
 import logging
 logging.basicConfig(level=logging.DEBUG)
                                                                                    
-import os
 import json
 
 from slack_sdk import WebClient
