@@ -1,29 +1,29 @@
 timeplusAppserver:
   image: timeplus/timeplus-appserver
-  tag: 2.9.27
+  tag: 2.9.28
 
 timeplusd:
   initJob:
     image: timeplus/timeplusd
-    tag: 2.9.9-rc.9
+    tag: alert 
 
   image: timeplus/timeplusd
-  tag: 2.9.9-rc.9
+  tag: alert 
 
   replicas: 3
   storage:
     stream:
       className: local-path
-      size: 20Gi
+      size: 200Gi
       # Keep this to be `null` if you are on Amazon EKS with EBS CSI controller.
       # Otherwise please carefully check your provisioner and set them properly.
-      selector: false
+      selector: null 
       nativelogSubPath: ./nativelog
       metastoreSubPath: ./metastore
     history:
       className: local-path
-      size: 50Gi
-      selector: false 
+      size: 100Gi
+      selector: null 
       subPath: ./history
     log:
       # This log PV is optional. If you have log collect service enabled on your k8s cluster, you can set this to be false.
@@ -31,7 +31,7 @@ timeplusd:
       enabled: true
       className: local-path
       size: 10Gi
-      selector: false 
+      selector: null 
       subPath: ./log
   defaultAdminPassword: timeplusd@t+
   resources:

@@ -1,0 +1,2 @@
+-- Network error in last 5 mins
+select window_start, count() as network_errors from tumble(system.timeplusd_log, 5s) where level = 'Error' and raw like '% client.d%' and _tp_time >= now() - 5m group by window_start

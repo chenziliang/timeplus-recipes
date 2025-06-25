@@ -3,6 +3,7 @@
 # Launch k3d cluster
 
 ```
+# Create local k3d cluster
 k3d cluster create local \
     --api-port 8080 \
     -p "8463:8463@loadbalancer" \
@@ -10,7 +11,12 @@ k3d cluster create local \
     --servers 1 \
     --servers-memory 4G \
     --agents 4 \
-    --agents-memory 8G 
+    --agents-memory 8G \
+    -v /Users/k/demo:/var/lib/rancher/k3s/storage@all
+
+# Validate the cluster
+k3d cluster list
+k3d node list 
 ```
 
 # Install service pods like load balancers and timeplus enterprise cluster
@@ -22,19 +28,21 @@ export VERSION=v7.0.4
 
 kubectl create ns $NS
 
-kubectl apply -f resilience/chaos_testing/timeplusd/services.yaml --wait
+kubectl apply -f resilience/timeplusd/services.yaml --wait
 
-helm -n $NS install -f timeplusd-helm.yaml $RELEASE timeplus/timeplus-enterprise --version $VERSION
+helm install -n $NS -f resilience/timeplusd/timeplusd-helm.yaml $RELEASE timeplus/timeplus-enterprise --version $VERSION
 
-kubectl wait --for=condition=Ready pods --all -n timeplus --timeout=300s
+kubectl wait --for=condition=Ready pods --all -n $NS --timeout=300s
 
-# Check the cluster load balancer
-watch -n 1 'timeplusd client --user test --password test1234 --query "select node_id(), now()"'  
+## Logon Timeplus Console
+
+Log on http://localhost:8000
+
+## Check the cluster load balancer
 
 ```
-
-# Logon Timeplus Console
-Log on http://localhost:8000
+watch -n 1 'timeplusd client --user test --password test1234 --query "select node_id(), now()"'  
+```
 
 # Chaos Mesh
 
@@ -127,11 +135,40 @@ kubectl apply -f resilience/chaos_testing/manifests/chaos_mesh/time_fault.yaml
 kubectl delete -f resilience/chaos_testing/manifests/chaos_mesh/time_fault.yaml
 ```
 
-## Disk fault -- not support yet
-
-
 # Unstall
 
 ```
 helm -n $NS uninstall $RELEASE
+```
+
+# Upgrade if upgrade from existing cluster 
+helm -n $NS upgrade -f resilience/timeplusd/timeplusd-helm.yaml $RELEASE timeplus/timeplus-enterprise
+
+# Fix k3d kubeconfig issues
+
+List current kube context
+
+```
+kubectl config get-contexts
+
+kubectl config current-context
+```
+
+## If k3d kubeconfig is not merged to ~/.kube/config
+
+Try 
+
+```
+k3d kubeconfig merge local --switch
+
+k3d kubeconfig get local > kubeconfig-local.yaml
+```
+
+## kubectl can't talk to k8s API server
+
+Change **https://host.docker.internal:8080** to **https://127.0.0.1:8080** in ~/.kube/config
+OR add the following entry to /etc/hosts 
+
+```
+127.0.0.1 host.docker.internal 
 ```

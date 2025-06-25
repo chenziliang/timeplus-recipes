@@ -9,7 +9,7 @@ spec:
     namespaces:
       - timeplus 
     labelSelectors:
-      statefulset.kubernetes.io/pod-name: timeplusd-2
+      statefulset.kubernetes.io/pod-name: timeplusd-0
   direction: to
   target:
     mode: all
@@ -17,4 +17,4 @@ spec:
       namespaces:
         - timeplus
       labelSelectors:
-        statefulset.kubernetes.io/pod-name: timeplusd-0
+        statefulset.kubernetes.io/pod-name: timeplusd-1
