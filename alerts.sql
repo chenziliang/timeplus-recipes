@@ -13,7 +13,7 @@ import json
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-slack_token = 'xoxb-...'
+slack_token = 'xb...'
 client = WebClient(token=slack_token)
  
 def send_to_slack(clusters, offline_nodes):

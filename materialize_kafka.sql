@@ -26,3 +26,32 @@ CREATE MATERIALIZED VIEW mv_test INTO test AS SELECT raw as s FROM kafka_test;
 
 -- Ad-hoc streaming query Timeplus stream test
 SELECT * FROM test;
+
+-- Mapping headers, Kafka record key and record timestamp with customized partitioner for write
+CREATE EXTERNAL STREAM ext_k_stream(
+    key string,
+    value int,
+    _tp_message_key string, -- Map to Kafka record key automatically
+    _tp_message_headers map(string, string), -- Map to Kafka record headers automatically
+    _tp_time datetime64(3), -- Map to Kafka record timestamp automatically
+)
+SETTINGS type='kafka', brokers='192.168.1.100:9092', topic='test', properties='partitioner=murmur2';
+
+insert into ext_k_stream(key, value, _tp_message_key) values 
+('six', 6, 'six'), 
+('seven', 7, 'seven'), 
+('eight', 8, 'eight'), 
+('nine', 9, 'nine'),
+('ten', 10, 'ten');
+
+select count() from table(ext_k_stream) group by _tp_shard;
+
+insert into ext_k_stream (key, value, _tp_message_headers) values 
+('one', 1, {'test_id': 'smoke_test_32_33', 'idx': '1'}), 
+('two', 2, {'test_id': 'smoke_test_32_33', 'idx': '2'}), 
+('three', 3, {'test_id': 'smoke_test_32_33', 'idx': '3'}),
+('four', 4, {'test_id': 'smoke_test_32_33', 'idx': '4'}),
+('five', 5, {'test_id': 'smoke_test_32_33', 'idx': '5'})
+
+
+select key, value, _tp_message_key, _tp_message_headers from table(ext_k_stream);
