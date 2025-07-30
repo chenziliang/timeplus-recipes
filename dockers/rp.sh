@@ -3,6 +3,7 @@
 docker run --pull=always --name=redpanda --rm \
     -v /Users/k/code/docker-volume/redpanda/data:/var/lib/redpanda/data \
     -p 9092:9092 \
+    -p 8081:8081 \
     redpandadata/redpanda \
     start \
     --overprovisioned \

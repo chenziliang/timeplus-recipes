@@ -55,3 +55,57 @@ insert into ext_k_stream (key, value, _tp_message_headers) values
 
 
 select key, value, _tp_message_key, _tp_message_headers from table(ext_k_stream);
+
+
+-- Avro schema registry
+
+-- 1) Save this file as sensor.avro
+```avro
+{
+  "type": "record",
+  "name": "sensor_sample",
+  "fields": [
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis"
+    },
+    {
+      "name": "identifier",
+      "type": "string",
+      "logicalType": "uuid"
+    },
+    {
+      "name": "value",
+      "type": "long"
+    }
+  ]
+}
+```
+
+
+-- 2) Register this schema against Redpanda schema registry
+rpk registry schema create sensor-value --schema sensor.avro 
+
+-- 3) Create `sensors` topic 
+rpk topic create sensors
+
+-- 4) Create Kafka external stream with avro schema
+
+CREATE EXTERNAL STREAM ext_sensors
+(
+  timestamp int64,
+  identifier string,
+  value int64
+)
+SETTINGS
+  type='kafka', -- required
+  brokers='localhost:9092', -- required
+  topic='contracts', -- required
+  data_format='Avro', -- required
+  schema_subject_name='sensor', -- for write avro
+  kafka_schema_registry_url='http://localhost:8081'; -- required for Avro
+
+INSERT INTO ext_sensors(timestamp, identifier, value) VALUES (1753853455520, 'dev1', 97);
+
+SELECT * FROM ext_sensors;
