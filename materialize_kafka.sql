@@ -83,7 +83,6 @@ select key, value, _tp_message_key, _tp_message_headers from table(ext_k_stream)
 }
 ```
 
-
 -- 2) Register this schema against Redpanda schema registry
 rpk registry schema create sensor-value --schema sensor.avro 
 
@@ -91,7 +90,6 @@ rpk registry schema create sensor-value --schema sensor.avro
 rpk topic create sensors
 
 -- 4) Create Kafka external stream with avro schema
-
 CREATE EXTERNAL STREAM ext_sensors
 (
   timestamp int64,
@@ -106,6 +104,8 @@ SETTINGS
   schema_subject_name='sensor', -- for write avro
   kafka_schema_registry_url='http://localhost:8081'; -- required for Avro
 
+-- Insert data and encode in avro
 INSERT INTO ext_sensors(timestamp, identifier, value) VALUES (1753853455520, 'dev1', 97);
 
-SELECT * FROM ext_sensors;
+-- Read and decode avro data to columns
+SELECT * FROM table(ext_sensors);
