@@ -35,8 +35,15 @@ def send_to_slack(clusters, offline_nodes):
         return [False for v in offline_nodes]
 $$;
 
--- Create test stream
-CREATE STREAM node_statuses(cluster string, node_id uint32, status string);
+CREATE STREAM node_states (cluster_id string, node_id string, node_state string)
+
+-- Create task to populate target stream node_states
+CREATE TASK refresh_node_states
+SCHEDULE 5s
+TIMEOUT 2s
+INTO node_states
+AS
+  SELECT cluster_id, node_id, node_state FROM system.cluster;
 
 -- Create Alert
 CREATE OR REPLACE ALERT offline_nodes_alert 
@@ -44,7 +51,7 @@ BATCH 5 EVENT WITH TIMEOUT 1 SECOND
 LIMIT 1 PER 1 SECOND
 CALL send_to_slack 
 AS 
-SELECT cluster, node_id FROM node_statuses WHERE status != 'Online'; 
+SELECT cluster_id, node_id FROM node_states WHERE status != 'Online'; 
 
 -- Emulate node status
 -- INSERT INTO node_statuses(cluster, node_id, status) VALUES ('timeplus_cluster_exp', 1, 'Online');
