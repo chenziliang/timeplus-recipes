@@ -25,7 +25,7 @@ do
         raw:temperature::float32,
         raw:_tp_time::datetime64 AS _tp_time
     FROM source
-    SETTIGNS checkpoint_settings = 'storage_type=s3;disk_name=ckpt_s3_disk;async=true;interval=5'
+    SETTINGS checkpoint_settings = 'storage_type=s3;disk_name=s3_ckpt_disk;async=true;interval=5'
 done
 
 

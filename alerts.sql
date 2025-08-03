@@ -2,18 +2,21 @@
 -- timeplusd python --config-file /etc/timeplusd-server/config.yaml -m pip install --user slack_sdk
 -- Create alert to slack UDF 
 
-CREATE OR REPLACE FUNCTION send_to_slack(cluster string, node_id uint32)
+CREATE OR REPLACE FUNCTION send_to_slack(cluster_id string, node_id uint32)
 RETURNS bool LANGUAGE PYTHON AS
 $$
+import os
+import json
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
                                                                                    
-import json
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-slack_token = 'xb...'
+# slack_token = os.environ['slack_token']
+slack_token = 'xoxb-'
 client = WebClient(token=slack_token)
  
 def send_to_slack(clusters, offline_nodes):
@@ -35,7 +38,7 @@ def send_to_slack(clusters, offline_nodes):
         return [False for v in offline_nodes]
 $$;
 
-CREATE STREAM node_states (cluster_id string, node_id string, node_state string)
+CREATE STREAM IF NOT EXISTS node_states (cluster_id string, node_id string, node_state string);
 
 -- Create task to populate target stream node_states
 CREATE TASK refresh_node_states
@@ -47,8 +50,8 @@ AS
 
 -- Create Alert
 CREATE OR REPLACE ALERT offline_nodes_alert 
-BATCH 5 EVENT WITH TIMEOUT 1 SECOND
-LIMIT 1 PER 1 SECOND
+BATCH 5 EVENTS WITH TIMEOUT 1s
+LIMIT 1 ALERTS PER 1s
 CALL send_to_slack 
 AS 
 SELECT cluster_id, node_id FROM node_states WHERE status != 'Online'; 

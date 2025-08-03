@@ -24,7 +24,7 @@ k3d node list
 ```
 export NS=timeplus
 export RELEASE=timeplus
-export VERSION=v7.0.4
+export VERSION=v7.0.13
 
 kubectl create ns $NS
 
