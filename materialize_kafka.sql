@@ -5,7 +5,9 @@
 -- rpk topic produce test 
 
 CREATE EXTERNAL STREAM kafka_test(raw string) 
-SETTINGS type='kafka', brokers='192.168.1.100:9092', topic='test';
+SETTINGS type='kafka', brokers='192.168.1.100:9092', topic='test', properties='queued.min.messages=10000000;queued.max.messages.kbytes=655360';
+
+-- for write properties='queue.buffering.max.ms=100';
 
 -- Insert to kafka topic test 
 
