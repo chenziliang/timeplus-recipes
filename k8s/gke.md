@@ -54,7 +54,8 @@ gcloud compute machine-types list --filter="name~'c4d'"
 gcloud container node-pools create standard-pool \
   --cluster=my-gke-cluster \
   --region=us-central1 \
-  --machine-type=c4d-standard-8 \
+  --machine-type=n2d-standard-8 \
+  --node-locations=us-central1-a \
   --num-nodes=3 \
   --enable-autoscaling --min-nodes=3 --max-nodes=5
 ```
@@ -65,6 +66,7 @@ gcloud container node-pools create standard-pool \
 gcloud container node-pools create lowcpu-pool \
   --cluster=my-gke-cluster \
   --region=us-central1 \
+  --node-locations=us-central1-a \
   --machine-type=c4d-standard-4 \
   --num-nodes=1
 ```
@@ -153,6 +155,8 @@ timeplusd:
 ## References
 
 https://cloud.google.com/sdk/docs/install?hl=en
+
 https://gcloud-compute.com/intel.html
+
 https://gcloud-compute.com/amd.html
 
