@@ -1,4 +1,4 @@
--- Format schema cache 
+-- Format schema cache
 SYSTEM DROP FORMAT SCHEMA CACHE
 SYSTEM DROP FORMAT SCHEMA CACHE FOR Protobuf
 
@@ -20,11 +20,11 @@ SYSTEM DECOMMISSION NODE victim_node [REPLACED BY target_node]
 -- Dynamically change log level
 SYSTEM SHOW LOGGERS;
 
--- Set Global Log Level. Valid levels : trace, debug, information, error, fatal 
+-- Set Global Log Level. Valid levels : trace, debug, information, error, fatal
 SYSTEM SET LOG LEVEL <level_name>;
 SYSTEM SET LOG LEVEL information;
 
--- Set Specific Logger Log Level 
+-- Set Specific Logger Log Level
 SYSTEM SET LOG LEVEL <level_name> FOR '<logger_name>';
 SYSTEM SET LOG LEVEL debug FOR 'DiskLocal';
 

@@ -1,15 +1,19 @@
--- T+ random stream `r_test` -> Kafka topic `test` -> T+ `test` stream 
+-- T+ random stream `r_test` -> Kafka topic `test` -> T+ `test` stream
 
--- Create external kafka stream `kafka_test` to point to kafka topic `test` 
--- docker exec 11c6c7813a54 rpk topic create test 
--- rpk topic produce test 
+-- Create external kafka stream `kafka_test` to point to kafka topic `test`
+-- docker exec 11c6c7813a54 rpk topic create test
+-- rpk topic produce test
 
-CREATE EXTERNAL STREAM kafka_test(raw string) 
-SETTINGS type='kafka', brokers='192.168.1.100:9092', topic='test', properties='queued.min.messages=10000000;queued.max.messages.kbytes=655360';
+CREATE EXTERNAL STREAM kafka_test(raw string)
+SETTINGS
+  type='kafka',
+  brokers='192.168.1.100:9092',
+  topic='test',
+  properties='queued.min.messages=10000000;queued.max.messages.kbytes=655360';
 
 -- for write properties='queue.buffering.max.ms=100';
 
--- Insert to kafka topic test 
+-- Insert to kafka topic test
 
 CREATE RANDOM STREAM r_test(s string);
 
@@ -39,18 +43,18 @@ CREATE EXTERNAL STREAM ext_k_stream(
 )
 SETTINGS type='kafka', brokers='192.168.1.100:9092', topic='test', properties='partitioner=murmur2';
 
-insert into ext_k_stream(key, value, _tp_message_key) values 
-('six', 6, 'six'), 
-('seven', 7, 'seven'), 
-('eight', 8, 'eight'), 
+insert into ext_k_stream(key, value, _tp_message_key) values
+('six', 6, 'six'),
+('seven', 7, 'seven'),
+('eight', 8, 'eight'),
 ('nine', 9, 'nine'),
 ('ten', 10, 'ten');
 
 select count() from table(ext_k_stream) group by _tp_shard;
 
-insert into ext_k_stream (key, value, _tp_message_headers) values 
-('one', 1, {'test_id': 'smoke_test_32_33', 'idx': '1'}), 
-('two', 2, {'test_id': 'smoke_test_32_33', 'idx': '2'}), 
+insert into ext_k_stream (key, value, _tp_message_headers) values
+('one', 1, {'test_id': 'smoke_test_32_33', 'idx': '1'}),
+('two', 2, {'test_id': 'smoke_test_32_33', 'idx': '2'}),
 ('three', 3, {'test_id': 'smoke_test_32_33', 'idx': '3'}),
 ('four', 4, {'test_id': 'smoke_test_32_33', 'idx': '4'}),
 ('five', 5, {'test_id': 'smoke_test_32_33', 'idx': '5'})
@@ -86,9 +90,9 @@ select key, value, _tp_message_key, _tp_message_headers from table(ext_k_stream)
 ```
 
 -- 2) Register this schema against Redpanda schema registry
-rpk registry schema create sensor-value --schema sensor.avro 
+rpk registry schema create sensor-value --schema sensor.avro
 
--- 3) Create `sensors` topic 
+-- 3) Create `sensors` topic
 rpk topic create sensors
 
 -- 4) Create Kafka external stream with avro schema
