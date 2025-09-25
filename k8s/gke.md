@@ -10,23 +10,22 @@ https://cloud.google.com/sdk/docs/install?hl=en
 
 ### Create Cluster 
 
-Start with a control plane and no default node pool, so you have full control:
+Start with a control plane with customized default node pool:
 ```
 gcloud container clusters create my-gke-cluster \
   --region us-central1 \
   --no-enable-autoupgrade \
   --no-enable-autorepair \
-  --num-nodes=1
+  --num-nodes=3 \
+  --machine-type=n2d-standard-8 \
+  --node-locations=us-central1-a
 ```
 
-- `--num-nodes=1` prevents GKE from creating the default pool.
 - Drop the `--no-enable-*` flags if you want Google to auto-manage upgrades/repairs.
 
 ```
 gcloud container clusters list --location=us-central1
-```
 
-``` 
 gcloud container clusters get-credentials my-gke-cluster --location=us-central1  
 ```
 
@@ -35,7 +34,7 @@ gcloud container clusters get-credentials my-gke-cluster --location=us-central1
 ```
 gcloud container node-pools create highcpu-pool \
   --cluster=my-gke-cluster \
-  --region=us-central1-a \
+  --region=us-central1 \
   --machine-type=c4d-highcpu-32 \
   --node-locations=us-central1-a \
   --num-nodes=1 \
@@ -49,6 +48,8 @@ gcloud compute machine-types list --filter="name~'c4d'"
 ```
 
 ### Add Node Pool (Standard)
+
+Can be skipped 
 
 ```
 gcloud container node-pools create standard-pool \
@@ -136,7 +137,7 @@ timeplusd:
       memory: 15Gi
 
   nodeSelector:
-    cloud.google.com/gke-nodepool: standard-pool
+    cloud.google.com/gke-nodepool: default-pool
 
   computeNode:
     replicas: 1
