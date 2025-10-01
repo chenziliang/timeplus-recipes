@@ -62,3 +62,13 @@ EMIT PERIODIC 2s;
 
 CREATE DISK IF NOT EXISTS ckpt_s3_disk disk(type = 's3_plain', endpoint = 'https://mat-view-ckpt.s3.us-west-2.amazonaws.com/kchen/', access_key_id = '...', secret_access_key = '...');
 
+
+-- local shared disk
+CREATE SCHEDULED MATERIALIZED VIEW sched_mv INTO sink
+AS
+SELECt s, sum(i) AS total
+FROM test
+GROUP BY s
+EMIT ON UPDATE WITH BATCH 5s
+SETTINGS checkpoint_settings='replication_type=shared;shared_disk=local_plain_shared';
+
