@@ -4,6 +4,18 @@
 
 -- Create S3 disk
 
+CREATE NAMED COLLECTION minio1 AS
+    endpoint='http://minio:9000',
+    access_key_id='minioroot',
+    secret_access_key='minioroot';
+
+CREATE EXTERNAL TABLE minio_ext (key string, value int32)
+SETTINGS
+    type='s3',
+    named_collection='minio1',
+    bucket='smoketest-0048-named-collection',
+    write_to='00_basic/data.json';
+
 CREATE DISK s3_ckpt_disk disk(
     type = 's3_plain',
     endpoint = 'http://localhost:9000/disk/checkpoint/',
