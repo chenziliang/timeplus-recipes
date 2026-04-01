@@ -5,7 +5,7 @@
 -- Create S3 disk
 
 CREATE DISK s3_ckpt_disk disk(
-    type = 's3',
+    type = 's3_plain',
     endpoint = 'http://localhost:9000/disk/checkpoint/',
     access_key_id = 'minioadmin',
     secret_access_key = 'minioadmin'

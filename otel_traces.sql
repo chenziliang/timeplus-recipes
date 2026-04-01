@@ -7,6 +7,17 @@ CREATE EXTERNAL STREAM splunk
 )
 SETTINGS type='http', url='http://127.0.0.1:8088/services/collector', http_header_Authorization='Splunk c9851fde-641d-4a1d-8609-ac808d3a5e5f';
 
+CREATE STREAM otel_traces
+(
+    trace_id string,
+    start_time datetime64(3),
+    end_time datetime64(3),
+    span_id string,
+    parent_span_id string,
+    name string,
+    attributes string
+); 
+
 
 CREATE MATERIALIZED VIEW trace_outliers_mv INTO splunk
 AS

@@ -93,3 +93,5 @@ CREATE MUTABLE STREAM transactions
 )
 PRIMARY KEY id
 SETTINGS ttl_seconds = 10; 
+
+OPTIMIZE STREAM v_transactions;
