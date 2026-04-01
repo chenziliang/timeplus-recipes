@@ -21,8 +21,21 @@ docker run -d --name redpanda-test \                                            
 # Create a user with the name "admin_user" and password "admin"
 docker exec -it redpanda-test rpk security user create admin_user -p admin
 
-# Disable super user authentication for admin API, and enable authentication for Kafka API
+# Enable super user authentication for admin API
 docker exec -it redpanda-test rpk cluster config set admin_api_require_auth true
+
+docker exec -it redpanda-test rpk cluster config set superusers "[admin_user]" \
+  --user admin_user --password admin
+
+# Enble SASL for Kafka API
+docker exec -it redpanda-test rpk cluster config set enable_sasl true \
+  --user admin_user --password admin
+
+# Grant permission
+docker exec -it redpanda rpk security acl create --allow-principal User:admin_user \
+  --operation all \
+  --topic any \
+  --group any
 
 # docker run --pull=always --name=redpanda --rm \
 docker run --name=redpanda --rm \
