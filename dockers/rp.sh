@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # Enable super user but without authentication for admin API, and enable SASL for Kafka API
-docker run -d --name redpanda-test \                                                                                                                                            chore/issue-11688-workload-rebalance ✭ ◼
+docker run -d --name redpanda \                                                                                                                                            chore/issue-11688-workload-rebalance ✭ ◼
   -p 9092:9092 \
   -p 8081:8081 \
+  -v /Users/k/code/docker-volume/redpanda/data:/var/lib/redpanda/data \
   docker.redpanda.com/redpandadata/redpanda:latest \
   redpanda start \
   --overprovisioned \
   --smp 1 \
-  --memory 1G \
+  --memory 4G \
   --reserve-memory 0M \
   --node-id 0 \
   --check=false \
@@ -19,16 +20,16 @@ docker run -d --name redpanda-test \                                            
   --set redpanda.superusers="[super]"
 
 # Create a user with the name "admin_user" and password "admin"
-docker exec -it redpanda-test rpk security user create admin_user -p admin
+docker exec -it redpanda rpk security user create admin_user -p admin
 
 # Enable super user authentication for admin API
-docker exec -it redpanda-test rpk cluster config set admin_api_require_auth true
+docker exec -it redpanda rpk cluster config set admin_api_require_auth true
 
-docker exec -it redpanda-test rpk cluster config set superusers "[admin_user]" \
+docker exec -it redpanda rpk cluster config set superusers "[admin_user]" \
   --user admin_user --password admin
 
 # Enble SASL for Kafka API
-docker exec -it redpanda-test rpk cluster config set enable_sasl true \
+docker exec -it redpanda rpk cluster config set enable_sasl true \
   --user admin_user --password admin
 
 # Grant permission
@@ -45,8 +46,8 @@ docker run --name=redpanda --rm \
     redpandadata/redpanda \
     start \
     --overprovisioned \
-    --smp 4  \
-    --memory 16G \
+    --smp 2  \
+    --memory 4G \
     --reserve-memory 0M \
     --node-id 0 \
     --advertise-kafka-addr 127.0.0.1 \
