@@ -1,10 +1,10 @@
 create external stream sink_to_timeplus 
 (
-    raw_cols string
+    raw string
 )
 AS $$
 
-import from proton_driver import client
+from proton_driver import client
 import json
 
 timeplus_client = None
@@ -31,12 +31,12 @@ def deinit():
         timeplus_client.disconnect()
 
 def sink_to_timeplus(raw_cols):
-    timeplus_client.execute("INSERT INTO target_stream(raw) VALUES", raw_cols)
+    timeplus_client.execute("INSERT INTO target_stream(raw) VALUES", [[raw_col] for raw_col in raw_cols])
 
 $$
 SETTINGS
     type='python',
     write_function_name='sink_to_timeplus',
     init_function_name='init',
-    init_function_parameters='{"user": "xxx", "password": "yyy"}',
+    init_function_parameters='{"user": "default", "password": "", "database": "default"}',
     deinit_function_name='deinit';
