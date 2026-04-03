@@ -5,6 +5,7 @@ create external stream sink_to_timeplus
 AS $$
 
 from proton_driver import client
+
 import json
 
 timeplus_client = None
@@ -20,7 +21,6 @@ def init(config_):
         "password": ""
     }
     """
-
     global timeplus_client
 
     config = json.loads(config_)
