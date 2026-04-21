@@ -84,6 +84,11 @@ Check nodes inside the cluster:
 kubectl get nodes --show-labels
 ```
 
+Check service
+```
+kubectl get svc -n timeplus
+```
+
 ### Use in Helm Charts
 
 ```
@@ -151,6 +156,12 @@ timeplusd:
 
     nodeSelector:
       cloud.google.com/gke-nodepool: highcpu-pool
+```
+
+## Delete the GEK Cluster
+
+```
+gcloud container clusters delete my-gke-cluster --region us-central1
 ```
 
 ## References

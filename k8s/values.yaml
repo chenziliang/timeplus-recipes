@@ -1,0 +1,64 @@
+timeplusAppserver:
+  enabled: true
+  service:
+    type: LoadBalancer
+    annotations:
+      networking.gke.io/load-balancer-type: "External"
+    ports:
+      - name: http
+        port: 8000
+        targetPort: 8000
+
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+timeplusd:
+  service:
+    clusterIP: None
+
+  replicas: 3
+
+  storage:
+    stream:
+      className: premium-rwo
+      size: 200Gi
+      selector: false
+      nativelogSubPath: ./nativelog
+      metastoreSubPath: ./metastore
+    history:
+      className: premium-rwo
+      size: 300Gi
+      selector: false
+      subPath: ./history
+    log:
+      enabled: true
+      className: premium-rwo
+      size: 40Gi
+      selector: false
+      subPath: ./log
+
+  defaultAdminPassword: timeplusd@t+
+
+  resources:
+    limits:
+      cpu: 8
+      memory: 30Gi
+    requests:
+      cpu: 4
+      memory: 15Gi
+
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+  config:
+    node_liveness:
+       heartbeat_interval_ms: 2000
+
+    # _tp_delay_server_start_seconds: 1800
+    metadata:
+      server:
+        connection_max_idle_ms: 0
+
+    data:
+      server:
+        connection_max_idle_ms: 0
