@@ -51,14 +51,52 @@ timeplusd:
     cloud.google.com/gke-nodepool: default-pool
 
   config:
-    node_liveness:
-       heartbeat_interval_ms: 2000
+    # Please note fully specifying the engine and the engine settings is important since
+    # internally we will compare the stream provision (creation) SQL and if the code
+    # detects settings, structure etc changes, it will drop existing stream and recreate
+    stream_metric_log:
+        engine: |-
+            engine Stream(1, 1, rand())
+                order by (to_hour(_tp_time), database, name)
+                ttl to_datetime(_tp_time) + INTERVAL 1 YEAR DELETE
+                settings logstore_codec='zstd'
+        database: system
+        table: stream_metric_log
+        flush_interval_milliseconds: 5000
+        collect_interval_milliseconds: 5000
 
-    # _tp_delay_server_start_seconds: 1800
-    metadata:
-      server:
-        connection_max_idle_ms: 0
+    # We use weak_hash32(node_id) here since it doesn't matter as it is single shard
+    introspection_state_log:
+        engine: |-
+            engine Stream(1, 1, weak_hash32(node_id))
+                primary key (database, name, state_name, dimension, node_id)
+                order by (database, name, state_name, dimension, node_id)
+                ttl to_datetime(_tp_time) + INTERVAL 2 MONTH DELETE
+                settings mode = 'versioned_kv', logstore_codec='zstd'
+        database: system
+        table: introspection_state_log
+        flush_interval_milliseconds: 5000
+        collect_interval_milliseconds: 5000
 
-    data:
-      server:
-        connection_max_idle_ms: 0
+    # We use weak_hash32(node_id) here since it doesn't matter as it is single shard
+    mat_view_dlq:
+        engine: |-
+            engine Stream(1, 1, weak_hash32(node_id))
+                order by (to_hour(_tp_time), database, view_name)
+                ttl to_datetime(_tp_time) + INTERVAL 2 MONTH DELETE
+                settings logstore_codec='zstd'
+        database: system
+        table: mat_view_dlq
+        flush_interval_milliseconds: 5000
+
+  #  node_liveness:
+  #      heartbeat_interval_ms: 2000
+
+  #   # _tp_delay_server_start_seconds: 1800
+  #   metadata:
+  #     server:
+  #       connection_max_idle_ms: 0
+
+  #   data:
+  #     server:
+  #       connection_max_idle_ms: 0

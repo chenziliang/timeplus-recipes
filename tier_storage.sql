@@ -4,21 +4,25 @@
 
 -- Create S3 disk
 
-CREATE DISK minio_00 disk(
+CREATE NAMED COLLECTION s3_access AS 
+    access_key_id = 'minioadmin',
+    secret_access_key = 'minioadmin';
+
+
+CREATE DISK s3_historical_tier disk(
+    named_collection=s3_access, 
     type = 's3',
     endpoint = 'http://localhost:9000/disk/cloudvol/',
-    access_key_id = 'minioadmin',
-    secret_access_key = 'minioadmin'
 );
 
 -- Create storage policy
-CREATE STORAGE POLICY hcs_minio_00 as $$
+CREATE STORAGE POLICY s3_tiering AS $$
     volumes:
         hot:
             disk: default
         cold:
-            disk: minio_00
-    moving_factor: 0.1
+            disk: s3_historical_tier
+    moving_factor: 0.4 
 $$;
 
 -- Use the tier storage
@@ -28,7 +32,7 @@ CREATE STREAM hcs_00
     s string
 )
 TTL to_datetime(_tp_time) + interval 5 second TO VOLUME 'cold'
-SETTINGS storage_policy = 'hcs_minio_00';
+SETTINGS storage_policy = 's3_tiering';
 
 -- Insert data
 insert into hcs_00 (i32, s) values (1, 'hcs1');
