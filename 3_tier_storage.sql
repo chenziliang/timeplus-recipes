@@ -5,7 +5,7 @@ CREATE DISK hdd_disk disk(
 );
 
 -- Tier 3 storage
-CREATE NAMED COLLECTION s3_access AS 
+CREATE NAMED COLLECTION s3_access AS
 access_key_id = 'xxx',
 secret_access_key = 'yyy'
 
@@ -21,20 +21,34 @@ volumes:
         disk: default
     cold:
         disk: s3_historical_tier
-move_factor: 0.5
+        prefer_not_to_merge: true         -- skip merges on S3
+        perform_ttl_move_on_insert: false -- background move only
+        volume_priority: 2
+move_factor: 0.6
 $$;
 
 -- 3-tier storage policy
 CREATE STORAGE POLICY ssd_hdd_s3_tiering AS $$
-      volumes:
-          hot:
-              disk: default
-          warm:
-              disk: hdd_disk
-          cold:
-              disk: s3_historical_tier
-      moving_factor: 0.4
+volumes:
+  hot:
+      disk: default
+      volume_priority: 1
+      max_data_part_size_bytes: 53687091200   -- 50 GB cap, larger parts spill to warm
+  warm:
+      disk: hdd_disk
+      least_used_ttl_ms: 30000
+      perform_ttl_move_on_insert: false       -- background move only
+      volume_priority: 2
+  cold:
+      disk: s3_historical_tier
+      prefer_not_to_merge: true               -- skip merges on S3
+      perform_ttl_move_on_insert: false       -- background move only
+      volume_priority: 3
+moving_factor: 0.5
 $$;
+
+-- SHOW STORAGE POLICIES [[NOT] [I]LIKE 'str'] [LIMIT expr]
+-- SHOW STORAGE POLICIES WHERE <predict>.
 
 -- Source generating stream
 CREATE RANDOM STREAM r(i int, s string, id string, a array(int)) settings shards=4;
@@ -43,12 +57,12 @@ CREATE RANDOM STREAM r(i int, s string, id string, a array(int)) settings shards
 CREATE STREAM rand_target(i int, s string, id string, a array(int))
 TTL to_start_of_hour(_tp_time) + interval 1 hour to volume 'warm',
     to_start_of_hour(_tp_time) + interval 12 hour to volume 'cold'
-settings 
-    shards=4, 
+settings
+    shards=4,
     shared_disk='s3_nativelog',
     storage_policy='ssd_hdd_s3_tiering';
 
 CREATE MATERIALIZED VIEW r_mv INTO rand_target
-AS 
+AS
 SELECT * FROM r
 SETTINGS eps=100000;
