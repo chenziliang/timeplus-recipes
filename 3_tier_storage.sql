@@ -9,22 +9,38 @@ CREATE NAMED COLLECTION s3_access AS
 access_key_id = 'xxx',
 secret_access_key = 'yyy'
 
-CREATE DISK s3_historical_tier disk(named_collection=s3_access, type='s3', endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/historical/');
+CREATE DISK s3_historical_tier disk(
+    named_collection=s3_access, 
+    type='s3', 
+    endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/historical/',
+    use_environment_credentials=false -- enable if using env vars or IAM role for auth
+);
 
-CREATE DISK s3_checkpoint disk(named_collection=s3_access, type='s3_plain', endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/checkpoint/');
+CREATE DISK s3_checkpoint disk(
+    named_collection=s3_access, 
+    type='s3_plain', 
+    endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/checkpoint/',
+    use_environment_credentials=false
+);
 
-CREATE DISK s3_nativelog disk(named_collection=s3_access, type='s3_plain', endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/nativelog/');
+CREATE DISK s3_nativelog disk(
+    named_collection=s3_access, 
+    type='s3_plain', 
+    endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/nativelog/',
+    use_environment_credentials=false
+);
 
 CREATE STORAGE POLICY s3_tiering as $$
 volumes:
     hot:
         disk: default
+        volume_priority: 1
     cold:
         disk: s3_historical_tier
         prefer_not_to_merge: true         -- skip merges on S3
         perform_ttl_move_on_insert: false -- background move only
         volume_priority: 2
-move_factor: 0.6
+move_factor: 0.2
 $$;
 
 -- 3-tier storage policy
@@ -44,7 +60,7 @@ volumes:
       prefer_not_to_merge: true               -- skip merges on S3
       perform_ttl_move_on_insert: false       -- background move only
       volume_priority: 3
-moving_factor: 0.5
+moving_factor: 0.2
 $$;
 
 -- SHOW STORAGE POLICIES [[NOT] [I]LIKE 'str'] [LIMIT expr]
