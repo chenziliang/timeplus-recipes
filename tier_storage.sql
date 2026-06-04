@@ -4,13 +4,13 @@
 
 -- Create S3 disk
 
-CREATE NAMED COLLECTION s3_access AS 
+CREATE NAMED COLLECTION s3_access AS
     access_key_id = 'minioadmin',
     secret_access_key = 'minioadmin';
 
 
 CREATE DISK s3_historical_tier disk(
-    named_collection=s3_access, 
+    named_collection=s3_access,
     type = 's3',
     endpoint = 'http://localhost:9000/disk/cloudvol/',
 );
@@ -22,7 +22,7 @@ CREATE STORAGE POLICY s3_tiering AS $$
             disk: default
         cold:
             disk: s3_historical_tier
-    moving_factor: 0.4 
+    moving_factor: 0.3
 $$;
 
 -- Use the tier storage
@@ -41,3 +41,4 @@ insert into hcs_00 (i32, s) values (2, 'hcs2');
 
 -- Check the tier storage
 SELECT partition, name, disk_name FROM system.parts WHERE table = 'hcs_00';
+

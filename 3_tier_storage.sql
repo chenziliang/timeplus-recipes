@@ -10,22 +10,22 @@ access_key_id = 'xxx',
 secret_access_key = 'yyy'
 
 CREATE DISK s3_historical_tier disk(
-    named_collection=s3_access, 
-    type='s3', 
+    named_collection=s3_access,
+    type='s3',
     endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/historical/',
     use_environment_credentials=false -- enable if using env vars or IAM role for auth
 );
 
 CREATE DISK s3_checkpoint disk(
-    named_collection=s3_access, 
-    type='s3_plain', 
+    named_collection=s3_access,
+    type='s3_plain',
     endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/checkpoint/',
     use_environment_credentials=false
 );
 
 CREATE DISK s3_nativelog disk(
-    named_collection=s3_access, 
-    type='s3_plain', 
+    named_collection=s3_access,
+    type='s3_plain',
     endpoint='https://s3.us-west-2.amazonaws.com/timeplusd-shared-disk/timeplus/nativelog/',
     use_environment_credentials=false
 );
@@ -75,7 +75,10 @@ TTL to_start_of_hour(_tp_time) + interval 1 hour to volume 'warm',
     to_start_of_hour(_tp_time) + interval 12 hour to volume 'cold'
 settings
     shards=4,
+    logstore_codec='zstd',
     shared_disk='s3_nativelog',
+    ingest_batch_timeout_ms=2000,
+    fetch_threads=4,
     storage_policy='ssd_hdd_s3_tiering';
 
 CREATE MATERIALIZED VIEW r_mv INTO rand_target
