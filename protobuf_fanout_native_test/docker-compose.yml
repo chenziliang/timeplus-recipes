@@ -1,0 +1,25 @@
+services:
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 2G
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://localhost:9092
+      - --set redpanda.auto_create_topics_enabled=false
+    # No Schema Registry needed: messages are PLAIN protobuf (raw SerializeToString),
+    # not Confluent wire format.
+    ports:
+      - "9092:9092"    # Kafka API
+      - "9644:9644"    # Admin API
+    healthcheck:
+      test: ["CMD", "rpk", "cluster", "info"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s

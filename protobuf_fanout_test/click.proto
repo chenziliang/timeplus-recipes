@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.example;
+
+// Registered in Schema Registry under subject "com.example.ClickEvent".
+// Routed by the fan-out to the Timeplus `clicks` stream. Bot traffic
+// (user_agent containing "bot") is dropped by the transform.
+message ClickEvent {
+  string session_id = 1;
+  string url        = 2;
+  string user_agent = 3;
+  int64  ts_ms      = 4;
+}

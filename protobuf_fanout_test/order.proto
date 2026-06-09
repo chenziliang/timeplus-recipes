@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.example;
+
+// Registered in Schema Registry under subject "com.example.OrderEvent"
+// (RecordNameStrategy). Routed by the fan-out to the Timeplus `orders` stream.
+message OrderEvent {
+  string order_id    = 1;
+  double amount      = 2;
+  string customer_id = 3;
+}

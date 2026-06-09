@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// Flat "envelope" message: one message type carries all three record shapes,
+// distinguished by `event_type`. This is what lets a SINGLE format_schema decode
+// the whole topic in C++ (ProtobufSingle). The fan-out routes on `event_type`.
+//
+// The SAME schema text is registered server-side in Timeplus via
+// CREATE FORMAT SCHEMA (see python_protobuf_fanout_native_decode.sql) — this file
+// is only used by produce.py to build messages on the producer side.
+message Event {
+  string event_type  = 1;   // "order" | "device" | "click"
+
+  // OrderEvent fields
+  string order_id    = 2;
+  double amount      = 3;
+  string customer_id = 4;
+
+  // DeviceEvent fields
+  string device_id   = 5;
+  double temperature = 6;
+
+  // ClickEvent fields
+  string session_id  = 7;
+  string url         = 8;
+  string user_agent  = 9;
+}

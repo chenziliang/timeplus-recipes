@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.example;
+
+// Registered in Schema Registry under subject "com.example.DeviceEvent".
+// Routed by the fan-out to the Timeplus `devices` stream.
+message DeviceEvent {
+  string device_id   = 1;
+  double temperature = 2;
+  int64  ts_ms       = 3;
+}
