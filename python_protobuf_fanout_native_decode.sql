@@ -127,12 +127,15 @@ def _setup_logging(log_file: str, level: str = "INFO") -> logging.Logger:
 
 def init(config_: str):
     """
-    config_ JSON:
+    config_ JSON (no credentials — see below):
     {
         "host":"127.0.0.1", "port":8463, "database":"default",
-        "user":"default", "password":"",
         "log_file":"/tmp/protobuf_router.log", "log_level":"INFO"
     }
+
+    Credentials are NOT hard-coded. timeplusd injects the ephemeral local-API
+    credentials __timeplus_local_api_user / __timeplus_local_api_password into
+    this module's namespace; we use those to connect back to Timeplus.
     """
     global _tp_client, _log
     config = json.loads(config_)
@@ -142,8 +145,8 @@ def init(config_: str):
         host     = config.get("host", "127.0.0.1"),
         port     = config.get("port", 8463),
         database = config.get("database", "default"),
-        user     = config.get("user", "default"),
-        password = config.get("password", ""),
+        user     = __timeplus_local_api_user,      # injected ephemeral credentials
+        password = __timeplus_local_api_password,
     )
     _log.info("protobuf_router started")
 
@@ -157,28 +160,38 @@ def deinit():
         _tp_client = None
 
 
+def _text(v):
+    """
+    Timeplus passes string columns to Python as `bytes`
+    (PyBytes_FromStringAndSize); decode to str at the boundary so comparisons
+    like et == "order" work. Non-bytes values pass through unchanged.
+    """
+    return v.decode("utf-8") if isinstance(v, (bytes, bytearray)) else v
+
+
 # ---------------------------------------------------------------------------
 # Write function: args are DECODED columns (one Python list per column), in the
-# declared column order. This is the single place for customized routing logic.
+# declared column order. String columns arrive as bytes — see _text().
+# This is the single place for customized routing logic.
 # ---------------------------------------------------------------------------
 def process(event_type, order_id, amount, customer_id,
             device_id, temperature, session_id, url, user_agent):
     orders, devices, clicks = [], [], []
 
     for i in range(len(event_type)):
-        et = event_type[i]
+        et = _text(event_type[i])
         if et == "order":
             # derive tier from amount
-            orders.append([order_id[i], amount[i], customer_id[i],
+            orders.append([_text(order_id[i]), amount[i], _text(customer_id[i]),
                            "hot" if amount[i] > 500 else "warm"])
         elif et == "device":
             # derive status from temperature
-            devices.append([device_id[i], temperature[i],
+            devices.append([_text(device_id[i]), temperature[i],
                             "alert" if temperature[i] > 80 else "ok"])
         elif et == "click":
             # drop bot traffic
-            if "bot" not in user_agent[i].lower():
-                clicks.append([session_id[i], url[i]])
+            if "bot" not in _text(user_agent[i]).lower():
+                clicks.append([_text(session_id[i]), _text(url[i])])
         else:
             _log.warning("Unknown event_type %r; skipping", et)
 
@@ -200,7 +213,7 @@ SETTINGS
     type                     = 'python',
     write_function_name      = 'process',
     init_function_name       = 'init',
-    init_function_parameters = '{"host":"127.0.0.1","port":8463,"user":"default","password":"","log_file":"/tmp/protobuf_router.log","log_level":"INFO"}',
+    init_function_parameters = '{"host":"127.0.0.1","port":8463,"database":"default","log_file":"/tmp/protobuf_router.log","log_level":"INFO"}',
     deinit_function_name     = 'deinit';
 
 

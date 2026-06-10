@@ -16,8 +16,8 @@ cd "$HERE"
 
 if [[ ! -f event_pb2.py ]]; then
   echo "==> Generating producer stub event_pb2.py..."
-  python3 -m grpc_tools.protoc -I"$HERE" --python_out="$HERE" "$HERE/event.proto"
+  uv run python3 -m grpc_tools.protoc -I"$HERE" --python_out="$HERE" "$HERE/event.proto"
 fi
 
 echo "==> Producing $COUNT messages per type via produce.py..."
-python3 produce.py --count "$COUNT"
+uv run python3 produce.py --count "$COUNT"

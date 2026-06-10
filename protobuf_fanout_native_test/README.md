@@ -90,7 +90,9 @@ docker exec redpanda rpk cluster info     # wait until healthy
 Run [`timeplus_streams.sql`](timeplus_streams.sql) (creates the `FORMAT SCHEMA`,
 `kafka_source`, and the 3 target streams). Then create the router from
 [`../python_protobuf_fanout_native_decode.sql`](../python_protobuf_fanout_native_decode.sql)
-(adjust its `init_function_parameters` for your host/port/creds), and run the
+(adjust its `init_function_parameters` for your host/port if needed — credentials
+are injected automatically via `__timeplus_local_api_user`/`__timeplus_local_api_password`),
+and run the
 `INSERT INTO python_protobuf_router SELECT ... FROM kafka_source` to start it.
 
 ### 4. Produce test messages
